@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Premium tea palette: ivory, soft greens, earthy browns */
+    --background: 45 36% 96%;
+    --foreground: 146 15% 18%;
+
+    --card: 45 36% 96%;
+    --card-foreground: 146 15% 18%;
+
+    --popover: 45 36% 96%;
+    --popover-foreground: 146 15% 18%;
+
+    --primary: 142 35% 30%;
+    --primary-foreground: 45 36% 96%;
+
+    --secondary: 142 30% 94%;
+    --secondary-foreground: 146 20% 20%;
+
+    --muted: 142 28% 92%;
+    --muted-foreground: 146 10% 35%;
+
+    --accent: 49 95% 50%;
+    --accent-foreground: 152 30% 18%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 142 20% 85%;
+    --input: 142 20% 85%;
+    --ring: 142 35% 30%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar tokens */
+    --sidebar-background: 45 36% 96%;
+    --sidebar-foreground: 146 15% 18%;
+    --sidebar-primary: 142 35% 30%;
+    --sidebar-primary-foreground: 45 36% 96%;
+    --sidebar-accent: 142 28% 92%;
+    --sidebar-accent-foreground: 146 20% 20%;
+    --sidebar-border: 142 20% 85%;
+    --sidebar-ring: 142 35% 30%;
+
+    /* Extra brand tokens */
+    --brand-green: 142 35% 30%;
+    --brand-brown: 30 28% 40%;
+    --ivory: 45 36% 96%;
+
+    /* Motion and effects */
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background) / 0.05), hsl(var(--background) / 0.9));
+    --shadow-elevate: 0 24px 48px -24px hsl(var(--brand-green) / 0.25);
+    --transition-smooth: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Scroll Animation Variables */
+    --scroll-offset: 0px;
+  }
+
+  .dark {
+    --background: 146 20% 9%;
+    --foreground: 45 36% 96%;
+
+    --card: 146 20% 9%;
+    --card-foreground: 45 36% 96%;
+
+    --popover: 146 20% 9%;
+    --popover-foreground: 45 36% 96%;
+
+    --primary: 142 40% 62%;
+    --primary-foreground: 146 20% 10%;
+
+    --secondary: 146 15% 16%;
+    --secondary-foreground: 45 36% 96%;
+
+    --muted: 146 15% 16%;
+    --muted-foreground: 146 30% 70%;
+
+    --accent: 30 30% 45%;
+    --accent-foreground: 45 36% 96%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 146 12% 22%;
+    --input: 146 12% 22%;
+    --ring: 142 40% 62%;
+    --sidebar-background: 146 20% 9%;
+    --sidebar-foreground: 45 36% 96%;
+    --sidebar-primary: 142 40% 62%;
+    --sidebar-primary-foreground: 146 20% 10%;
+    --sidebar-accent: 146 15% 16%;
+    --sidebar-accent-foreground: 45 36% 96%;
+    --sidebar-border: 146 12% 22%;
+    --sidebar-ring: 142 40% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Swiper custom styles */
+.tea-swiper .swiper-pagination {
+  bottom: -20px !important;
+}
+
+.tea-bullet {
+  background: hsl(var(--muted)) !important;
+  opacity: 0.5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.tea-bullet-active {
+  background: hsl(var(--tea-gold)) !important;
+  opacity: 1 !important;
+  transform: scale(1.2) !important;
+}
+
+.tea-swiper .swiper-button-next,
+.tea-swiper .swiper-button-prev {
+  color: hsl(var(--tea-green)) !important;
+  background: hsl(var(--card)) !important;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  margin-top: -25px !important;
+  box-shadow: var(--shadow-elegant) !important;
+  transition: all 0.3s ease !important;
+}
+
+.tea-swiper .swiper-button-next:hover,
+.tea-swiper .swiper-button-prev:hover {
+  background: hsl(var(--tea-green)) !important;
+  color: hsl(var(--card)) !important;
+  transform: scale(1.1) !important;
+}
