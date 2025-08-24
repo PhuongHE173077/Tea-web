@@ -131,8 +131,8 @@ All colors MUST be HSL.
 
 .tea-swiper .swiper-button-next,
 .tea-swiper .swiper-button-prev {
-  color: hsl(var(--tea-green)) !important;
-  background: hsl(var(--card)) !important;
+  color: hsl(var(--card)) !important;
+  background: hsl(var(--tea-green)) !important;
   border-radius: 50% !important;
   width: 50px !important;
   height: 50px !important;

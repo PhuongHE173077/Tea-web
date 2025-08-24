@@ -41,7 +41,7 @@ const blogPosts = [
 
 const BlogSection = () => {
   return (
-    <section id="blog" className="py-20 bg-background">
+    <section id="blog" className="py-20 ">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
@@ -57,8 +57,8 @@ const BlogSection = () => {
           <div className="lg:col-span-2">
             <Card className="group overflow-hidden bg-card/95 backdrop-blur border-border/50 hover:shadow-elegant transition-all duration-500">
               <div className="relative">
-                <img 
-                  src={blogPosts[0].image} 
+                <img
+                  src={blogPosts[0].image}
                   alt={blogPosts[0].title}
                   className="w-full h-80 md:h-96 object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -69,7 +69,7 @@ const BlogSection = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               </div>
-              
+
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-4 text-muted-foreground text-sm">
                   <div className="flex items-center gap-1">
@@ -84,15 +84,15 @@ const BlogSection = () => {
                     {blogPosts[0].category}
                   </Badge>
                 </div>
-                
+
                 <h3 className="text-3xl font-serif font-bold mb-4 text-foreground group-hover:text-tea-green transition-colors">
                   {blogPosts[0].title}
                 </h3>
-                
+
                 <p className="text-muted-foreground font-elegant leading-relaxed mb-6">
                   {blogPosts[0].excerpt}
                 </p>
-                
+
                 <Button className="bg-gradient-tea hover:shadow-elegant transition-all duration-300 group">
                   Đọc Tiếp
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -107,13 +107,13 @@ const BlogSection = () => {
               <Card key={post.id} className="group overflow-hidden bg-card/95 backdrop-blur border-border/50 hover:shadow-elegant transition-all duration-500">
                 <div className="flex flex-col sm:flex-row">
                   <div className="relative sm:w-32 h-32 sm:h-auto flex-shrink-0">
-                    <img 
-                      src={post.image} 
+                    <img
+                      src={post.image}
                       alt={post.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
-                  
+
                   <CardContent className="p-4 flex-1">
                     <div className="flex items-center gap-2 mb-2 text-muted-foreground text-xs">
                       <Calendar className="h-3 w-3" />
@@ -121,19 +121,19 @@ const BlogSection = () => {
                       <Clock className="h-3 w-3 ml-2" />
                       <span>{post.readTime}</span>
                     </div>
-                    
+
                     <Badge variant="outline" className="text-xs mb-2">
                       {post.category}
                     </Badge>
-                    
+
                     <h4 className="font-serif font-bold mb-2 text-foreground group-hover:text-tea-green transition-colors line-clamp-2">
                       {post.title}
                     </h4>
-                    
+
                     <p className="text-sm text-muted-foreground font-elegant line-clamp-2 mb-3">
                       {post.excerpt}
                     </p>
-                    
+
                     <Button variant="ghost" size="sm" className="text-tea-green hover:text-tea-green hover:bg-tea-green/10 p-0 h-auto font-semibold group">
                       Đọc Tiếp
                       <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
@@ -142,7 +142,7 @@ const BlogSection = () => {
                 </div>
               </Card>
             ))}
-            
+
             <Card className="bg-gradient-tea text-primary-foreground p-6 text-center">
               <h4 className="font-serif font-bold text-xl mb-2">
                 Đăng Ký Nhận Tin

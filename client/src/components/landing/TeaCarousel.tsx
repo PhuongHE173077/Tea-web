@@ -54,8 +54,9 @@ const teas = [
 ]
 
 const TeaCarousel = () => {
+  const teaCarousel = [...teas, ...teas]; // Duplicate the array for infinite loop effect
   return (
-    <section id="loai-tra" className="py-20 bg-gradient-hero">
+    <section id="loai-tra" className="py-20 ">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
@@ -71,6 +72,7 @@ const TeaCarousel = () => {
           spaceBetween={30}
           slidesPerView={1}
           centeredSlides={true}
+          loop={true}
           autoplay={{
             delay: 4000,
             disableOnInteraction: false,
@@ -99,9 +101,10 @@ const TeaCarousel = () => {
           }}
           className="tea-swiper"
         >
-          {teas.map((tea) => (
+          {teaCarousel.map((tea) => (
             <SwiperSlide key={tea.id}>
-              <Card className="bg-card/95 backdrop-blur border-border/50 hover:shadow-elegant transition-all duration-500 group">
+              {/* Swiper injects .swiper-slide-active class to the active slide */}
+              <Card className="bg-card/95 border border-tea-green shadow-md transition-all duration-500 group swiper-slide-active:bg-white swiper-slide-active:shadow-2xl swiper-slide-active:scale-[1.06] swiper-slide-active:border-tea-gold">
                 <CardContent className="p-6">
                   <div className="relative overflow-hidden rounded-lg mb-6">
                     <img

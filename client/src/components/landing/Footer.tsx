@@ -16,7 +16,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="font-elegant leading-relaxed opacity-90">
-              Mang đến cho bạn những hương vị trà tinh túy nhất từ những vùng đất trà nổi tiếng, 
+              Mang đến cho bạn những hương vị trà tinh túy nhất từ những vùng đất trà nổi tiếng,
               với chất lượng cao cấp và dịch vụ tận tâm.
             </p>
             <div className="flex space-x-4">
@@ -82,8 +82,8 @@ const Footer = () => {
               Nhận những bài viết mới nhất và ưu đãi đặc biệt từ chúng tôi
             </p>
             <div className="space-y-3">
-              <Input 
-                type="email" 
+              <Input
+                type="email"
                 placeholder="Nhập email của bạn"
                 className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/70"
               />
