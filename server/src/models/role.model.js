@@ -9,8 +9,8 @@ const roleSchema = new Schema({
     rol_description: { type: String, default: '' },
     rol_grants: [
         {
-            resource: { type: Schema.Types.ObjectId, ref: 'Resource', required: true }, /** Profile, Product,balance, ... */
-            actions: [{ type: String, required: true }],/** read, create, update, delete */
+            resource: { type: Schema.Types.ObjectId, ref: 'Resource', required: true },
+            actions: [{ type: String, required: true }],
             attributes: { type: String, default: "*" }
         }
     ],

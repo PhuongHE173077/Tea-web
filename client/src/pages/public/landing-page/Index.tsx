@@ -8,7 +8,7 @@ import MainSection from "@/components/landing/MainSection"
 import TeaCarousel from "@/components/landing/TeaCarousel"
 import { motion } from 'framer-motion'
 
-const Index = () => {
+const LandingPage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-green-50 to-emerald-100">
 
@@ -50,4 +50,4 @@ const Index = () => {
   )
 }
 
-export default Index
+export default LandingPage

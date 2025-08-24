@@ -1,27 +1,26 @@
 import Resource from "~/models/resource.model"
 import ApiError from "~/utils/ApiError"
+import { slugify } from "~/utils/slugify"
 
 const createResource = async (
-    {
-        name = 'profile',
-        slug = 'p00001',
-        description = ''
-    }
+    data
 ) => {
     try {
         //1. check slug exist
 
-        const resourceExist = await Resource.findOne({ src_slug: slug })
+        const dataNew = {
+            src_name: data.src_name,
+            src_slug: slugify(data.src_name),
+            src_description: data.src_description
+        }
+
+        const resourceExist = await Resource.findOne({ src_slug: dataNew.src_slug })
         if (resourceExist) {
             throw new ApiError(400, "Resource already exist")
         }
 
         //2. create resource
-        const result = await Resource.create({
-            src_name: name,
-            src_slug: slug,
-            src_description: description
-        })
+        const result = await Resource.create(dataNew)
 
         return result
     } catch (error) {

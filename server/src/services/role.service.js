@@ -1,10 +1,12 @@
 import Role from "~/models/role.model"
 import ApiError from "~/utils/ApiError"
+import { slugify } from "~/utils/slugify"
 
 const createRole = async (role) => {
     try {
+        const rol_slug = slugify(role.rol_name)
         //1 . check role exist
-        const roleExist = await Role.findOne({ rol_slug: role.rol_slug })
+        const roleExist = await Role.findOne({ rol_slug })
         if (roleExist) {
             throw new ApiError(400, "Role already exist")
         }
@@ -12,7 +14,7 @@ const createRole = async (role) => {
         //2. create role
         const result = await Role.create({
             rol_name: role.rol_name,
-            rol_slug: role.rol_slug,
+            rol_slug,
             rol_description: role.rol_description,
             rol_grants: role.rol_grants
         })

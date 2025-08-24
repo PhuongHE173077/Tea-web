@@ -22,7 +22,7 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Trà Việt" className="h-10 w-10" />
-          <span className="font-bold text-lg">TRÀ VIỆT</span>
+          <span className="font-bold text-lg">{import.meta.env.VITE_APP_NAME}</span>
         </div>
 
         <div className="hidden md:block flex-1 mx-8">

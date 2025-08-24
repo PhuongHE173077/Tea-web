@@ -8,13 +8,10 @@ const createUser = async (req, res, next) => {
             email: Joi.string().email().required(),
             password: Joi.string().required(),
             userName: Joi.string().required(),
-            confirmPassword: Joi.string().required(),
+            phone: Joi.string().required(),
         })
         await schema.validateAsync(req.body, { abortEarly: false })
 
-        if (req.body.password !== req.body.confirmPassword) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, 'Password and confirm password not match')
-        }
         next()
     } catch (error) {
         next(new ApiError(StatusCodes.BAD_REQUEST, error.message))

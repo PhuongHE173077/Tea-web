@@ -25,7 +25,7 @@ const createUser = async (data) => {
             slug = slugify(data.userName.split('@')[0]) + '.' + randomDigits;
         } while (await User.exists({ usr_slug: slug }).lean());
 
-        const roleUser = await Role.findOne({ rol_name: 'user' }).lean();
+        // const roleUser = await Role.findOne({ rol_name: 'user' }).lean();
 
         //3. create user
         const newData = {
@@ -33,9 +33,9 @@ const createUser = async (data) => {
             usr_email: data.email,
             usr_name: data.userName,
             usr_password: data.password,
+            usr_phone: data.phone,
             usr_salt: bcryptjs.hashSync(data.password, 8),
             usr_verify_token: uuidv4(),
-            usr_role: roleUser._id
         }
 
         const result = await User.create(newData)

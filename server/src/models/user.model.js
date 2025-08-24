@@ -6,10 +6,10 @@ const DOCUMENT_NAME = 'User';
 const userSchema = new Schema({
     usr_slug: { type: String, required: true, unique: true, index: true },
     usr_name: { type: String, default: '' },
-    usr_password: { type: String, default: '' },
+    usr_password: { type: String, required: true },
     usr_salt: { type: String, default: '' },
     usr_email: { type: String, required: true, unique: true, index: true },
-    usr_phone: { type: String, default: '' },
+    usr_phone: { type: String, required: true },
     usr_avatar: { type: String, default: '' },
     usr_date_of_birth: { type: Date, default: null },
     user_address: {

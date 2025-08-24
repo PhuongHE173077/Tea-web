@@ -1,33 +1,38 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/public/landing-page/Index";
-import NotFound from "./pages/NotFound";
-import { Products } from "./pages/public/products";
+import { Provider } from "react-redux";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { persistStore } from "redux-persist";
+import { PersistGate } from "redux-persist/integration/react";
 import PublicLayout from "./layout/public";
-import { TeaProductDetail } from "./pages/public/product-detail";
+import Login from "./pages/auth/login";
+import NotFound from "./pages/NotFound";
+import { publicRouter } from "./routers/public.router";
+import { store } from "./store/store";
+import { ToastContainer } from "react-toastify";
 
-const queryClient = new QueryClient();
-
+const persistor = persistStore(store);
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/san-pham" element={<Products />} />
-            <Route path="/san-pham/:slug" element={<TeaProductDetail />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <Provider store={store}>
+    <PersistGate persistor={persistor}>
+      <TooltipProvider>
+        <ToastContainer />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/dang-nhap" element={<Login />} />
+            <Route path="*" element={<NotFound />} />
+
+            <Route element={<PublicLayout />}>
+              {publicRouter.map((route, index) => (
+                <Route key={index} path={route.path} element={route.element} />
+              ))
+              }
+            </Route>
+
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </PersistGate>
+  </Provider>
 );
 
 export default App;
