@@ -37,14 +37,14 @@ export const FloatingParticles: React.FC = () => {
                 y: Math.random() * canvas.height,
                 vx: (Math.random() - 0.5) * 0.4,
                 vy: (Math.random() - 0.5) * 0.4,
-                size: Math.random() * 15 + 10, // kích thước lá
+                size: Math.random() * 25 + 10, // kích thước lá
                 opacity: Math.random() * 0.5 + 0.5,
             })
         }
 
         // load ảnh lá trà
         const leafImg = new Image()
-        leafImg.src = "/leaf.png" // để ảnh trong public/leaf.png
+        leafImg.src = "/tea.png" // để ảnh trong public/leaf.png
 
         let animationId: number
 

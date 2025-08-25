@@ -5,9 +5,10 @@ import { slugify } from "~/utils/slugify"
 const createNew = async (req, res, next) => {
     try {
         const newCategory = {
-            category_name: req.body.name,
-            category_slug: slugify(req.body.name),
-            category_description: req.body.description,
+            category_name: req.body.category_name,
+            category_slug: slugify(req.body.category_name),
+            category_description: req.body.category_description,
+            status: req.body.status || "active"
         }
         const createdCategory = await categoryService.createCategory(newCategory)
         res.status(StatusCodes.CREATED).json(createdCategory)
@@ -24,7 +25,31 @@ const getCategories = async (req, res, next) => {
         next(error)
     }
 }
+
+const updateCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params
+
+        const updateNew = await categoryService.updateCategory(id, req.body)
+        res.status(StatusCodes.OK).json(updateNew)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const deleteCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params
+        await categoryService.deleteCategory(id)
+        res.status(StatusCodes.OK).json({ message: "Category deleted successfully" })
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const categoryController = {
     createNew,
-    getCategories
+    getCategories,
+    updateCategory,
+    deleteCategory
 }

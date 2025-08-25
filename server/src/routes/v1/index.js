@@ -22,7 +22,7 @@ Router.use('/user', userRoutes)
 Router.use('/rbac', rbacRoutes)
 
 //category APIs
-Router.use('/category', categoryRoutes)
+Router.use('/categories', categoryRoutes)
 
 
 export const APIs_V1 = Router

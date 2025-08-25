@@ -8,7 +8,7 @@ import MainSection from './components/MainSection'
 export const Products = () => {
     return (
         <div className="min-h-screen  relative overflow-hidden">
-            <FloatingParticles />
+            {/* <FloatingParticles /> */}
             <AnniversarySwiper />
             <MainSection />
         </div>

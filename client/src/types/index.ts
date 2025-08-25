@@ -23,4 +23,14 @@ declare global {
         comment: string;
         date: string;
     }
+
+    interface Category {
+        _id: string
+        category_name: string
+        category_slug: string
+        category_description: string
+        status: "active" | "inactive"
+        createdAt: string
+        updatedAt: string
+    }
 }

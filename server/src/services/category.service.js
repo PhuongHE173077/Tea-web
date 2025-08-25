@@ -1,4 +1,5 @@
 import Category from "~/models/category.model"
+import { slugify } from "~/utils/slugify"
 
 const createCategory = async (categoryData) => {
     try {
@@ -20,7 +21,30 @@ const getCategories = async () => {
     }
 }
 
+const updateCategory = async (id, updateData) => {
+    try {
+        if (updateData.name) {
+            updateData.category_name = updateData.name
+            updateData.category_slug = slugify(updateData.name)
+            delete updateData.name
+        }
+        const updatedCategory = await Category.findByIdAndUpdate(id, updateData, { new: true })
+        return updatedCategory
+    } catch (error) {
+        throw error
+    }
+}
+const deleteCategory = async (id) => {
+    try {
+        await Category.findByIdAndDelete(id)
+    } catch (error) {
+        throw error
+    }
+}
+
 export const categoryService = {
     createCategory,
-    getCategories
+    getCategories,
+    updateCategory,
+    deleteCategory
 }

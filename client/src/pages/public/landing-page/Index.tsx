@@ -13,7 +13,9 @@ const LandingPage = () => {
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-green-50 to-emerald-100">
 
       <Hero />
-      {/* <div className="w-full max-w-5xl mx-auto">
+
+      <AboutSection />
+      <div className="w-full max-w-5xl mx-auto">
         <div className="relative w-full overflow-hidden rounded-xl shadow-lg aspect-video">
           <iframe
             className="absolute top-0 left-0 w-full h-full"
@@ -24,8 +26,7 @@ const LandingPage = () => {
             allowFullScreen
           />
         </div>
-      </div> */}
-      <AboutSection />
+      </div>
 
       <MainSection />
       <EventSection />
