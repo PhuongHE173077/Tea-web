@@ -9,6 +9,8 @@ import NotFound from "./pages/NotFound";
 import { publicRouter } from "./routers/public.router";
 import { store } from "./store/store";
 import { ToastContainer } from "react-toastify";
+import DashboardLayout from "./layout/admin";
+import { adminRouter } from "./routers/admin.router";
 
 const persistor = persistStore(store);
 const App = () => (
@@ -23,6 +25,13 @@ const App = () => (
 
             <Route element={<PublicLayout />}>
               {publicRouter.map((route, index) => (
+                <Route key={index} path={route.path} element={route.element} />
+              ))
+              }
+            </Route>
+
+            <Route element={<DashboardLayout />}>
+              {adminRouter.map((route, index) => (
                 <Route key={index} path={route.path} element={route.element} />
               ))
               }
