@@ -30,8 +30,8 @@ export default function DashboardLayout() {
                     <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href={routerNavBar.find(item => item.url === location.pathname)?.url}>
-                                    {routerNavBar.find(item => item.url === location.pathname)?.title}
+                                <BreadcrumbLink >
+                                    Quản trị hệ thống
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                         </BreadcrumbList>

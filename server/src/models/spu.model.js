@@ -1,4 +1,4 @@
-const { Schema } = require("mongoose");
+const { Schema, model } = require("mongoose");
 const { type } = require("os");
 
 const COLLECTION_NAME = 'Spus';
@@ -6,16 +6,23 @@ const DOCUMENT_NAME = 'Spu';
 
 const spuSchema = new Schema({
     product_name: { type: String, required: true },
-    product_slug: { type: String, required: true },
+    product_slug: { type: String, required: true, unique: true },
     product_description: { type: String, required: true },
 
     product_thumb: { type: String, required: true },
     product_images: [{ type: String, required: true }],
+    product_cover: { type: String, required: true },
+    product_basePrice: { type: Number, default: 0 },
 
-    product_shop: { type: Schema.Types.ObjectId, ref: 'Shop' },
-
-    product_attribute: { type: Schema.Types.Mixed, required: true },
+    product_attribute: { type: Array, default: [] },
     product_category: { type: Schema.Types.ObjectId, ref: 'Category' },
+    product_taste: [
+        { type: Schema.Types.ObjectId, ref: 'Taste' }
+    ],
+    product_effects: [
+        { type: Schema.Types.ObjectId, ref: 'ProductEffect' }
+    ],
+    product_ratingQuantity: { type: Number, default: 0 },
 
     product_ratingAverage: {
         type: Number,
@@ -24,10 +31,9 @@ const spuSchema = new Schema({
         max: [5, 'Rating must be below 5.0'],
         set: val => Math.round(val * 10) / 10
     },
-    product_validations: { type: Array, default: [] },
 
-    isDraft: { type: Boolean, default: true, index: true, select: false },
-    isPublished: { type: Boolean, default: false, index: true, select: false },
+    isDraft: { type: Boolean, default: false, index: true, select: false },
+    isPublished: { type: Boolean, default: true, index: true, select: false },
     isDeleted: { type: Boolean, default: false },
 }, {
     timestamps: true,

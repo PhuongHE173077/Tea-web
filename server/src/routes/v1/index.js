@@ -4,6 +4,10 @@ import { userRoutes } from './user'
 import { rbacRoutes } from './rbac'
 import { authRoutes } from './auth'
 import { categoryRoutes } from './category'
+import { productRoutes } from './product'
+import { imageRouter } from './Image'
+import { effectRoutes } from './effect'
+import { tasteRoutes } from './taste'
 
 
 const Router = express.Router()
@@ -23,6 +27,16 @@ Router.use('/rbac', rbacRoutes)
 
 //category APIs
 Router.use('/categories', categoryRoutes)
+
+//product APIs
+Router.use('/spus', productRoutes)
+
+//product APIs
+Router.use('/images', imageRouter)
+
+Router.use('/effects', effectRoutes)
+
+Router.use('/tastes', tasteRoutes)
 
 
 export const APIs_V1 = Router

@@ -27,8 +27,8 @@ All colors MUST be HSL.
     --muted: 142 28% 92%;
     --muted-foreground: 146 10% 35%;
 
-    --accent: 49 95% 50%;
-    --accent-foreground: 152 30% 18%;
+    --accent: 200 100% 85%;
+    --accent-foreground: 200 30% 20%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -61,6 +61,8 @@ All colors MUST be HSL.
 
     /* Scroll Animation Variables */
     --scroll-offset: 0px;
+
+
   }
 
   .dark {
@@ -146,4 +148,13 @@ All colors MUST be HSL.
   background: hsl(var(--tea-green)) !important;
   color: hsl(var(--card)) !important;
   transform: scale(1.1) !important;
+}
+
+.colorDashboard {
+  background: hsl(45 36% 92%);
+  border: 1px solid hsl(45 25% 75%);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px hsl(0 0% 0% / 0.08);
+  padding: 16px;
+  color: hsl(30 20% 20%);
 }

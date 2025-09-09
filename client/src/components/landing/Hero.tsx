@@ -8,7 +8,7 @@ const Hero = () => {
   const [spotlight, setSpotlight] = useState({ x: 50, y: 40 });
 
   const heroStyle = useMemo(() => ({
-    background: `radial-gradient(600px 400px at ${spotlight.x}% ${spotlight.y}%, hsl(var(--accent) / 0.18), transparent 60%)`
+    background: `radial-gradient(600px 400px at ${spotlight.x}% ${spotlight.y}%, hsl(49 95% 50% / 0.18), transparent 60%)`
   }), [spotlight]);
 
   useEffect(() => {

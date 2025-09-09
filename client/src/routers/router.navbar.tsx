@@ -23,8 +23,8 @@ export const routerNavBar: RouteNavBar[] = [
                 url: "/products/list",
             },
             {
-                title: "Thêm sản phẩm",
-                url: "/products/add",
+                title: "Thuộc tính sản phẩm",
+                url: "/products/attribute",
             },
         ],
     },

@@ -1,5 +1,9 @@
+import ProductAttribute from "@/pages/admin/attribute";
 import CategoryManage from "@/pages/admin/category";
 import Dashboard from "@/pages/admin/dashboard";
+import ProductManagement from "@/pages/admin/products";
+import AddProduct from "@/pages/admin/products/add.product";
+import UpdateProduct from "@/pages/admin/products/update.product";
 import { Router } from "@/types/router";
 
 export const adminRouter: Router[] = [
@@ -10,5 +14,21 @@ export const adminRouter: Router[] = [
     {
         path: "/products/category",
         element: <CategoryManage />,
+    },
+    {
+        path: "/products/list",
+        element: <ProductManagement />,
+    },
+    {
+        path: "/products/:slug",
+        element: <UpdateProduct />
+    },
+    {
+        path: "/products/new",
+        element: <AddProduct />
+    },
+    {
+        path: "/products/attribute",
+        element: <ProductAttribute />
     }
 ]

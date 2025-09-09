@@ -19,6 +19,8 @@ const skuSchema = new Schema({
     sku_default: { type: Boolean, default: false },
     sku_slug: { type: String, default: 0, unique: true },
     sku_price: { type: String, required: true },
+    sku_sale_price: { type: String, default: 0 },
+    image: { type: String, required: true },
     sku_stock: { type: String, default: 0 },
     sku_sort: { type: Number, default: 0 },
     product_id: { type: Schema.Types.ObjectId, ref: 'Product', required: true },

@@ -33,4 +33,42 @@ declare global {
         createdAt: string
         updatedAt: string
     }
+
+    interface Product {
+        _id: string,
+        product_name: string,
+        product_slug: string,
+        product_description: string,
+        product_thumb: string,
+        product_cover: string,
+        product_images: string[],
+        product_brewing?: string[],
+        product_basePrice: number,
+        product_attribute: {
+            name: string,
+            price: string[],
+            unit: string
+        }[],
+        product_category: Category,
+        product_ratingAverage: number,
+        isPublished: boolean,
+        isDeleted: boolean,
+        createdAt: string,
+    }
+
+    interface Sku {
+        _id: string,
+        sku_tier_idx: string[],
+        sku_slug: string,
+        sku_price: number,
+        sku_sale_price: number,
+        image_thumbnail: string,
+        sku_stock: number,
+        sku_default: boolean,
+        sku_sort: number,
+        product_id: string,
+        createdAt: string,
+    }
+
+
 }
