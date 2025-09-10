@@ -4,7 +4,8 @@ import { discountService } from "~/services/discount.service"
 const createDiscount = async (req, res, next) => {
     try {
         // Lấy user ID từ JWT token
-        const userId = req.jwtDecoded?.userId
+        const userId = req.jwtDecoded?._id
+        console.log("🚀 ~ createDiscount ~ userId:", userId)
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
@@ -18,7 +19,7 @@ const createDiscount = async (req, res, next) => {
         }
 
         const newDiscount = await discountService.createDiscount(discountData)
-        
+
         res.status(StatusCodes.CREATED).json({
             success: true,
             message: 'Discount created successfully',
@@ -32,7 +33,7 @@ const createDiscount = async (req, res, next) => {
 const getDiscounts = async (req, res, next) => {
     try {
         const result = await discountService.getDiscounts(req.query)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discounts retrieved successfully',
@@ -48,7 +49,7 @@ const getDiscountById = async (req, res, next) => {
     try {
         const { id } = req.params
         const discount = await discountService.getDiscountById(id)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discount retrieved successfully',
@@ -63,7 +64,7 @@ const updateDiscount = async (req, res, next) => {
     try {
         const { id } = req.params
         const updatedDiscount = await discountService.updateDiscount(id, req.body)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discount updated successfully',
@@ -78,7 +79,7 @@ const deleteDiscount = async (req, res, next) => {
     try {
         const { id } = req.params
         const result = await discountService.deleteDiscount(id)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: result.message
@@ -91,12 +92,12 @@ const deleteDiscount = async (req, res, next) => {
 const validateDiscountCode = async (req, res, next) => {
     try {
         const { code, order_value, user_id } = req.body
-        
+
         // Nếu không có user_id trong body, lấy từ JWT token
         const userId = user_id || req.jwtDecoded?.userId
-        
+
         const result = await discountService.validateDiscountCode(code, userId, order_value)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discount code is valid',
@@ -110,7 +111,7 @@ const validateDiscountCode = async (req, res, next) => {
 const getActiveDiscounts = async (req, res, next) => {
     try {
         const activeDiscounts = await discountService.getActiveDiscounts()
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Active discounts retrieved successfully',
@@ -124,8 +125,8 @@ const getActiveDiscounts = async (req, res, next) => {
 const useDiscount = async (req, res, next) => {
     try {
         const { discount_id, order_id } = req.body
-        const userId = req.jwtDecoded?.userId
-        
+        const userId = req.jwtDecoded?._id
+
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
@@ -134,7 +135,7 @@ const useDiscount = async (req, res, next) => {
         }
 
         const result = await discountService.useDiscount(discount_id, userId, order_id)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discount used successfully',
@@ -147,7 +148,7 @@ const useDiscount = async (req, res, next) => {
 
 const getDiscountStats = async (req, res, next) => {
     try {
-        const userId = req.jwtDecoded?.userId
+        const userId = req.jwtDecoded?._id
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
@@ -157,7 +158,7 @@ const getDiscountStats = async (req, res, next) => {
 
         // Lấy thống kê discount của user hiện tại
         const stats = await discountService.getDiscountStats(userId)
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Discount statistics retrieved successfully',
@@ -172,9 +173,9 @@ const toggleDiscountStatus = async (req, res, next) => {
     try {
         const { id } = req.params
         const { is_active } = req.body
-        
+
         const updatedDiscount = await discountService.updateDiscount(id, { is_active })
-        
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: `Discount ${is_active ? 'activated' : 'deactivated'} successfully`,

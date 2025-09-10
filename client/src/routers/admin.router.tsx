@@ -1,6 +1,7 @@
 import ProductAttribute from "@/pages/admin/attribute";
 import CategoryManage from "@/pages/admin/category";
 import Dashboard from "@/pages/admin/dashboard";
+import DiscountManagement from "@/pages/admin/discount";
 import ProductManagement from "@/pages/admin/products";
 import AddProduct from "@/pages/admin/products/add.product";
 import UpdateProduct from "@/pages/admin/products/update.product";
@@ -30,5 +31,9 @@ export const adminRouter: Router[] = [
     {
         path: "/products/attribute",
         element: <ProductAttribute />
+    },
+    {
+        path: "/discount",
+        element: <DiscountManagement />
     }
 ]

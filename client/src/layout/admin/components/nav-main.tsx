@@ -17,7 +17,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 
 export function NavMain({
     items,
@@ -35,6 +35,7 @@ export function NavMain({
 }) {
 
     const location = useLocation();
+    const navigate = useNavigate()
     return (
         <SidebarGroup>
             <SidebarMenu>
@@ -49,6 +50,9 @@ export function NavMain({
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton tooltip={item.title}
                                     className={location.pathname.startsWith(item.url) ? "bg-[hsl(142_40%_62%)]" : ""}
+                                    onClick={() => {
+                                        item.items && item.items.length > 0 ? null : navigate(item.url)
+                                    }}
                                 >
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>

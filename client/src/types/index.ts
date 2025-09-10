@@ -85,5 +85,70 @@ declare global {
         createdAt: string,
     }
 
+    interface Discount {
+        _id: string;
+        code: string;
+        name: string;
+        description: string;
+        discount_type: "percentage" | "fixed_amount";
+        discount_value: number;
+        min_order_value: number;
+        max_discount_amount?: number;
+        start_date: string;
+        end_date: string;
+        usage_limit: number;
+        used_count: number;
+        is_active: boolean;
+        users_used: {
+            user_id: string;
+            used_at: string;
+            order_id: string;
+        }[];
+        created_by: string;
+        createdAt: string;
+        updatedAt: string;
+    }
+
+    interface DiscountFormData {
+        code: string;
+        name: string;
+        description: string;
+        discount_type: "percentage" | "fixed_amount";
+        discount_value: number;
+        min_order_value: number;
+        max_discount_amount?: number;
+        start_date: string;
+        end_date: string;
+        usage_limit: number;
+        is_active: boolean;
+    }
+
+    interface DiscountFilters {
+        page?: number;
+        limit?: number;
+        is_active?: boolean;
+        discount_type?: "percentage" | "fixed_amount";
+        search?: string;
+        sort_by?: string;
+        sort_order?: "asc" | "desc";
+    }
+
+    interface DiscountStats {
+        overview: {
+            total_discounts: number;
+            active_discounts: number;
+            expired_discounts: number;
+            used_discounts: number;
+            total_usage: number;
+        };
+        top_used_discounts: {
+            _id: string;
+            code: string;
+            name: string;
+            used_count: number;
+            usage_limit: number;
+        }[];
+    }
+
 
 }

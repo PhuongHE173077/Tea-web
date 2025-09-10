@@ -93,12 +93,6 @@ const createDiscount = async (req, res, next) => {
                     'number.integer': 'Usage limit must be a whole number'
                 }),
             is_active: Joi.boolean().default(true),
-            created_by: Joi.string()
-                .required()
-                .pattern(/^[0-9a-fA-F]{24}$/)
-                .messages({
-                    'string.pattern.base': 'Created by must be a valid ObjectId'
-                })
         })
 
         await schema.validateAsync(req.body, { abortEarly: false })
@@ -243,7 +237,7 @@ const getDiscounts = async (req, res, next) => {
         if (error) {
             throw error
         }
-        
+
         req.query = value
         next()
     } catch (error) {
