@@ -15,8 +15,8 @@ const createNew = async (data) => {
             product_attribute: data.product_attribute,
             product_category: data.product_category,
             product_slug: data.product_slug,
-            product_thumb: data.product_thumb ? data.product_thumb : product_images[0],
-            product_cover: data.product_cover ? data.product_cover : product_images[0],
+            product_thumb: data.product_thumb ? data.product_thumb : data.product_images[0],
+            product_cover: data.product_cover ? data.product_cover : data.product_images[0],
             product_brewing: data.product_brewing,
             product_taste: data.product_taste,
             product_effects: data.product_effects,
@@ -24,7 +24,7 @@ const createNew = async (data) => {
             isPublished: data.isPublished
         }
 
-        const newSpu = new SPU(data)
+        const newSpu = new SPU(newData)
 
         const savedSpu = await newSpu.save()
         return savedSpu
@@ -61,6 +61,9 @@ const getAllSpu = async (page, itemsPerPage, search) => {
                     foreignField: "product_id",
                     as: "skus",
                 },
+            },
+            {
+                $sort: { createdAt: -1 },
             },
             {
                 $facet: {
@@ -178,10 +181,74 @@ const updateById = async (id, updateData) => {
     }
 }
 
+const getRelatedProductsBySlug = async (slug, limit = 8) => {
+    try {
+        // Tìm sản phẩm hiện tại dựa trên slug để lấy category
+        const currentProduct = await SPU.findOne({ product_slug: slug })
+        if (!currentProduct) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tại!")
+        }
+
+        // Tìm các sản phẩm cùng category, loại trừ sản phẩm hiện tại
+        const result = await SPU.aggregate([
+            {
+                $match: {
+                    _id: { $ne: currentProduct._id },
+                    isPublished: true,
+                    isDeleted: false
+                }
+            },
+            {
+                $lookup: {
+                    from: "Categories",
+                    localField: "product_category",
+                    foreignField: "_id",
+                    as: "product_category"
+                }
+            },
+            {
+                $lookup: {
+                    from: "Skus",
+                    localField: "_id",
+                    foreignField: "product_id",
+                    as: "skus"
+                }
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
+            {
+                $limit: limit
+            }
+        ]).exec()
+
+        const relatedProducts = result.map((product) => {
+            return {
+                ...product,
+                product_category: product.product_category[0] || null,
+                skus: product.skus || []
+            }
+        })
+
+        return {
+            currentProduct: {
+                _id: currentProduct._id,
+                product_name: currentProduct.product_name,
+                product_slug: currentProduct.product_slug
+            },
+            relatedProducts,
+            total: relatedProducts.length
+        }
+    } catch (error) {
+        throw error
+    }
+}
+
 export const spuService = {
     createNew,
     getAllSpu,
     getBySlug,
     deleteById,
-    updateById
+    updateById,
+    getRelatedProductsBySlug
 }

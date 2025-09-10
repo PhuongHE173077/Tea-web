@@ -29,6 +29,31 @@ export const singleFileValidator = (file: any) => {
   return null
 }
 
+export const multipleFilesValidator = (files: FileList) => {
+  const errors: string[] = []
+  const validFiles: File[] = []
+
+  if (!files || files.length === 0) {
+    return { errors: ['No files selected'], validFiles: [] }
+  }
+
+  if (files.length > 10) {
+    return { errors: ['Maximum 10 files allowed'], validFiles: [] }
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    const error = singleFileValidator(file)
+    if (error) {
+      errors.push(`${file.name}: ${error}`)
+    } else {
+      validFiles.push(file)
+    }
+  }
+
+  return { errors, validFiles }
+}
+
 export const slugify = (val: string) => {
   if (!val) return ''
   return String(val)

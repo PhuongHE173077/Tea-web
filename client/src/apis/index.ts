@@ -4,3 +4,7 @@ export const createImageUrl = async (data: any) => {
     return await axiosCustomize.post('/images/upload', data)
 }
 
+export const createMultipleImageUrls = async (data: any) => {
+    return await axiosCustomize.post('/images/upload-multiple', data)
+}
+

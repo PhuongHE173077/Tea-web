@@ -1,95 +1,160 @@
-import { Eye, Heart, ShoppingCart, Star, ChevronDown, Filter } from "lucide-react";
-import { useState } from "react";
-import ProductCard from "./ProductCard";
-import { teas } from "../mock-api";
+import { fetchProductsAPIs } from "@/apis/product.apis";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger } from "@/components/ui/select";
 import { SelectValue } from "@radix-ui/react-select";
+import { useEffect, useState, useCallback } from "react";
+import ProductCard from "./ProductCard";
+import { fetchCategoriesAPIs } from "@/apis/category.apis";
+import { fetchEffect, fetchTaste } from "@/apis/attribute.apis";
+import SidebarFilter from "./Sidebar";
+import Pagination from "./Pagination";
+import LoadingSpinner from "./LoadingSpinner";
 
-
-const Sidebar = () => {
-    const [openSections, setOpenSections] = useState({
-        category: true,
-        price: true,
-        taste: true,
-        usage: true
-    });
-
-    const toggleSection = (section: string) => {
-        setOpenSections(prev => ({
-            ...prev,
-            [section]: !prev[section]
-        }));
-    };
-
-    const FilterSection = ({ title, items, sectionKey }: { title: string, items: string[], sectionKey: string }) => (
-        <div className="border-b  pb-6">
-            <button
-                onClick={() => toggleSection(sectionKey)}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-900 hover:text-green-700 transition-colors text-lg"
-            >
-                {title}
-                <ChevronDown className={`w-5 h-5 transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
-            </button>
-            {openSections[sectionKey] && (
-                <div className="mt-4 space-y-3">
-                    {items.map((item, index) => (
-                        <label key={index} className="flex items-center space-x-3 text-base text-gray-700 hover:text-green-700 cursor-pointer transition-colors">
-                            <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500 shadow-sm" />
-                            <span>{item}</span>
-                        </label>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-
-    return (
-        <div className="p-6 h-fit sticky top-4 shadow-xl">
-            <div className="flex items-center gap-3 mb-8 pb-6 border-b ">
-                <Filter className="w-6 h-6 text-green-600" />
-                <h2 className="font-bold text-gray-900 text-xl tracking-wide">Lọc theo danh mục</h2>
-            </div>
-
-            <div className="space-y-8">
-                <FilterSection
-                    title="Loại trà"
-                    items={["Trà Xanh", "Trà Thảo Mộc", "Trà nổ hoa"]}
-                    sectionKey="category"
-                />
-
-                <div className="border-b border-gray-100 pb-6">
-                    <h3 className="font-semibold text-gray-900 mb-4 text-lg">Lọc trong khoảng giá</h3>
-                    <div className="space-y-3">
-                        <input
-                            type="range"
-                            min="0"
-                            max="7000000"
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider shadow-sm"
-                        />
-                        <div className="flex justify-between text-base text-gray-700">
-                            <span>0 VNĐ</span>
-                            <span>6.999.000 VNĐ</span>
-                        </div>
-                    </div>
-                </div>
-
-                <FilterSection
-                    title="Khẩu vị"
-                    items={["Cây tre lâu năm", "Ngọt hậu", "Nhẹ nhàng", "Đậm đà", "Hương vị cần bằng", "Hương vị nhiều lớp", "Trà thơm", "Ngọt thơm thảo mộc"]}
-                    sectionKey="taste"
-                />
-
-                <FilterSection
-                    title="Tác dụng"
-                    items={["Dễ ngủ", "Nâng cao tinh thần", "Tăng tập trung", "Thư giãn", "Tĩnh tâo"]}
-                    sectionKey="usage"
-                />
-            </div>
-        </div>
-    );
-};
+interface FilterState {
+    categories: string[];
+    priceRange: [number, number];
+    tastes: string[];
+    effects: string[];
+    sortBy: string;
+}
 
 const TeaProductsLayout = () => {
+    //data
+    const [teas, setTeas] = useState<Product[]>([]);
+    const [filteredTeas, setFilteredTeas] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [tastes, setTastes] = useState<Taste[]>([]);
+    const [effects, setEffects] = useState<Effect[]>([]);
+
+    // Pagination
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const size = 12;
+
+    // Filter
+    const [filter, setFilter] = useState<FilterState>({
+        categories: [],
+        priceRange: [0, 7000000],
+        tastes: [],
+        effects: [],
+        sortBy: ""
+    });
+
+    // Fetch initial data
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [productsRes, categoriesRes, tastesRes, effectsRes] = await Promise.all([
+                fetchProductsAPIs({ page: 1, size: 1000, search: "" }), // Fetch all products for client-side filtering
+                fetchCategoriesAPIs(),
+                fetchTaste(),
+                fetchEffect()
+            ]);
+
+            setTeas(productsRes.data);
+            setFilteredTeas(productsRes.data);
+            setTotalProducts(productsRes.total);
+            setCategories(categoriesRes.data);
+            setTastes(tastesRes.data);
+            setEffects(effectsRes.data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // Filter and sort products
+    const applyFilters = useCallback(() => {
+        let filtered = [...teas];
+
+        // Filter by categories
+        if (filter.categories.length > 0) {
+            filtered = filtered.filter(tea =>
+                filter.categories.includes(tea.product_category?.category_name || '')
+            );
+        }
+
+        // Filter by price range
+        filtered = filtered.filter(tea =>
+            tea.product_basePrice >= filter.priceRange[0] &&
+            tea.product_basePrice <= filter.priceRange[1]
+        );
+
+        // Filter by tastes (assuming product has taste field)
+        if (filter.tastes.length > 0) {
+            // This would need backend support for taste filtering
+            // For now, we'll skip this filter
+        }
+
+        // Filter by effects (assuming product has effects field)
+        if (filter.effects.length > 0) {
+            // This would need backend support for effects filtering
+            // For now, we'll skip this filter
+        }
+
+        // Sort products
+        if (filter.sortBy) {
+            switch (filter.sortBy) {
+                case 'price-asc':
+                    filtered.sort((a, b) => a.product_basePrice - b.product_basePrice);
+                    break;
+                case 'price-desc':
+                    filtered.sort((a, b) => b.product_basePrice - a.product_basePrice);
+                    break;
+                case 'name-asc':
+                    filtered.sort((a, b) => a.product_name.localeCompare(b.product_name));
+                    break;
+                case 'name-desc':
+                    filtered.sort((a, b) => b.product_name.localeCompare(a.product_name));
+                    break;
+                case 'rating-desc':
+                    filtered.sort((a, b) => b.product_ratingAverage - a.product_ratingAverage);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        setFilteredTeas(filtered);
+        setTotalProducts(filtered.length);
+        setTotalPages(Math.ceil(filtered.length / size));
+        setPage(1); // Reset to first page when filters change
+    }, [teas, filter, size]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [applyFilters]);
+
+    // Get current page products
+    const getCurrentPageProducts = useCallback(() => {
+        const startIndex = (page - 1) * size;
+        const endIndex = startIndex + size;
+        return filteredTeas.slice(startIndex, endIndex);
+    }, [filteredTeas, page, size]);
+
+    const currentProducts = getCurrentPageProducts();
+
+    // Handle filter changes
+    const handleFilterChange = (newFilter: Partial<FilterState>) => {
+        setFilter(prev => ({ ...prev, ...newFilter }));
+    };
+
+    // Handle pagination
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+
+
     return (
         <div className="min-h-screen ">
             <div className="container mx-auto px-4 py-12">
@@ -97,7 +162,13 @@ const TeaProductsLayout = () => {
                     {/* Sidebar - Hidden on mobile, shown on desktop */}
                     <div className="lg:w-80 xl:w-96">
                         <div className="lg:sticky lg:top-4">
-                            <Sidebar />
+                            <SidebarFilter
+                                categories={categories}
+                                effects={effects}
+                                tastes={tastes}
+                                filter={filter}
+                                onFilterChange={handleFilterChange}
+                            />
                         </div>
                     </div>
 
@@ -106,50 +177,57 @@ const TeaProductsLayout = () => {
                         {/* Header */}
                         <div className="flex items-center justify-between mb-5">
                             <div>
-                                <p className="text-gray-700 text-sm">Hiển thị tất cả {teas.length} kết quả</p>
+                                <p className="text-gray-700 text-sm">
+                                    Hiển thị {currentProducts.length} trong tổng số {totalProducts} kết quả
+                                    {page > 1 && ` (Trang ${page}/${totalPages})`}
+                                </p>
                             </div>
-                            <Select >
+                            <Select value={filter.sortBy} onValueChange={(value) => handleFilterChange({ sortBy: value })}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Sắp xếp" />
                                 </SelectTrigger>
-                                <SelectContent >
+                                <SelectContent>
                                     <SelectGroup>
-                                        <SelectLabel>Fruits</SelectLabel>
-                                        <SelectItem value="apple">Apple</SelectItem>
-                                        <SelectItem value="banana">Banana</SelectItem>
-                                        <SelectItem value="blueberry">Blueberry</SelectItem>
-                                        <SelectItem value="grapes">Grapes</SelectItem>
-                                        <SelectItem value="pineapple">Pineapple</SelectItem>
+                                        <SelectLabel>Sắp xếp theo</SelectLabel>
+                                        <SelectItem value="name-asc">Tên A-Z</SelectItem>
+                                        <SelectItem value="name-desc">Tên Z-A</SelectItem>
+                                        <SelectItem value="price-asc">Giá thấp đến cao</SelectItem>
+                                        <SelectItem value="price-desc">Giá cao đến thấp</SelectItem>
+                                        <SelectItem value="rating-desc">Đánh giá cao nhất</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
                         </div>
 
+                        {/* Loading State */}
+                        {loading && <LoadingSpinner />}
+
                         {/* Products Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-                            {teas.length === 0 ? (
-                                <div className="col-span-full text-center py-16">
-                                    <p className="text-gray-400 text-xl">Không có sản phẩm nào được tìm thấy</p>
-                                </div>
-                            ) : (
-                                teas.map((tea, index) => (
-                                    <div className="animate-fade-in">
-                                        <ProductCard key={tea._id} tea={tea} index={index} />
+                        {!loading && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                                {currentProducts.length === 0 ? (
+                                    <div className="col-span-full text-center py-16">
+                                        <p className="text-gray-400 text-xl">Không có sản phẩm nào được tìm thấy</p>
+                                        <p className="text-gray-500 text-sm mt-2">Thử điều chỉnh bộ lọc để xem thêm sản phẩm</p>
                                     </div>
-                                ))
-                            )}
-                        </div>
+                                ) : (
+                                    currentProducts.map((tea, index) => (
+                                        <div key={tea._id} className="animate-fade-in">
+                                            <ProductCard tea={tea} index={index} />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
 
                         {/* Pagination */}
-                        <div className="flex justify-center mt-16">
-                            <div className="flex items-center gap-3">
-                                <button className="px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-sm hover:bg-green-50 hover:border-green-400 text-gray-700 font-semibold transition">Trước</button>
-                                <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-400 text-white rounded-xl shadow font-bold">1</button>
-                                <button className="px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-sm hover:bg-green-50 hover:border-green-400 text-gray-700 font-semibold transition">2</button>
-                                <button className="px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-sm hover:bg-green-50 hover:border-green-400 text-gray-700 font-semibold transition">3</button>
-                                <button className="px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-sm hover:bg-green-50 hover:border-green-400 text-gray-700 font-semibold transition">Sau</button>
-                            </div>
-                        </div>
+                        {!loading && (
+                            <Pagination
+                                currentPage={page}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

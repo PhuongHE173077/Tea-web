@@ -16,6 +16,20 @@ declare global {
         rating: number;
     }
 
+    interface Taste {
+        _id: string;
+        taste_name: string;
+        taste_slug: string;
+        taste_description: string;
+    }
+
+    interface Effect {
+        _id: string;
+        effect_name: string;
+        effect_slug: string;
+        effect_description: string;
+    }
+
     interface Review {
         _id: string;
         username: string;
@@ -46,8 +60,9 @@ declare global {
         product_basePrice: number,
         product_attribute: {
             name: string,
-            price: string[],
-            unit: string
+            price: string,
+            unit: string,
+            image?: string
         }[],
         product_category: Category,
         product_ratingAverage: number,

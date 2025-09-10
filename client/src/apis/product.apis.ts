@@ -26,3 +26,7 @@ export const deleteProductAPIs = async (id: string) => {
 export const updateProductAPIs = async (id: string, data: any) => {
     return await axiosCustomize.put(`/spus/${id}`, data)
 }
+
+export const fetchRelatedProducts = async (slug: string, limit = 4) => {
+    return await axiosCustomize.get(`/spus/related/${slug}?limit=${limit}`)
+}

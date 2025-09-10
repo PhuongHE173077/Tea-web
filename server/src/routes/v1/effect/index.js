@@ -5,7 +5,7 @@ import { authMiddlewares } from '~/middlewares/authMiddlewares'
 const router = express.Router()
 
 router.route('/')
-    .get(authMiddlewares.isAuthorized, productEffectController.getEffects)
+    .get(productEffectController.getEffects)
     .post(authMiddlewares.isAuthorized, productEffectController.createEffect)
 
 router.route('/:id')

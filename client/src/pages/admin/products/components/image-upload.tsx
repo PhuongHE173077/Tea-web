@@ -8,8 +8,8 @@ import { Upload, X, Eye, Loader2, BookImage, BookDownIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { toast } from "react-toastify"
-import { singleFileValidator } from "@/lib/utils"
-import { createImageUrl } from "@/apis"
+import { singleFileValidator, multipleFilesValidator } from "@/lib/utils"
+import { createImageUrl, createMultipleImageUrls } from "@/apis"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ProductAdd } from "../types"
 
@@ -50,14 +50,71 @@ export default function ImageUpload({ product, setProduct, single = false, multi
     }
   };
 
+  const uploadMultipleImages = async (files: FileList) => {
+    // Validate tất cả files trước khi upload
+    const { errors, validFiles } = multipleFilesValidator(files);
+
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+    }
+
+    if (validFiles.length === 0) {
+      return [];
+    }
+
+    let reqData = new FormData();
+    validFiles.forEach(file => {
+      reqData.append('images', file);
+    });
+
+    try {
+      const response = await toast.promise(
+        createMultipleImageUrls(reqData),
+        { pending: `Đang tải ${validFiles.length} ảnh lên...` }
+      );
+      return response.data;
+    } catch (err) {
+      toast.error("Upload thất bại");
+      return [];
+    }
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsUploading(true)
-    const image = await uploadImage(event);
-    setProduct({
-      ...product,
-      product_images: [...product.product_images, image]
-    })
-    setIsUploading(false)
+    const files = event.target.files;
+
+    if (!files || files.length === 0) {
+      setIsUploading(false)
+      return;
+    }
+
+    try {
+      if (files.length === 1) {
+        // Upload single file
+        const image = await uploadImage(event);
+        if (image) {
+          setProduct({
+            ...product,
+            product_images: [...product.product_images, image]
+          })
+        }
+      } else {
+        // Upload multiple files
+        const imageUrls = await uploadMultipleImages(files);
+        if (imageUrls.length > 0) {
+          setProduct({
+            ...product,
+            product_images: [...product.product_images, ...imageUrls]
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false)
+      // Reset input value
+      event.target.value = '';
+    }
   }
 
 
@@ -177,6 +234,7 @@ export default function ImageUpload({ product, setProduct, single = false, multi
                 <>
                   <Upload className="w-8 h-8 text-gray-400" />
                   <span className="text-sm text-gray-500">Tải ảnh lên</span>
+                  <span className="text-xs text-gray-400">(Có thể chọn nhiều file)</span>
                 </>
               )}
             </Button>

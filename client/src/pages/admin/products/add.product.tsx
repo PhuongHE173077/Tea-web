@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Star, ImageIcon, Package, CirclePlusIcon, ChartBarDecreasing, DeleteIcon, Trash2Icon } from 'lucide-react';
+import { Package, CirclePlusIcon, ChartBarDecreasing, Trash2Icon } from 'lucide-react';
 import ImageUpload from './components/image-upload';
 import DialogAddSku from './components/DialogAddSku';
 import { ProductAdd } from './types';
@@ -225,7 +223,7 @@ export default function AddProduct() {
                                                     </div>
                                                 </div>
                                                 <div className="">
-                                                    <DeleteIcon
+                                                    <Trash2Icon
                                                         className="w-5 h-5 text-red-500 cursor-pointer hover:text-red-600"
                                                         onClick={() => {
                                                             const updatedSteps = product.product_brewing.filter(

@@ -1,3 +1,4 @@
+import CartPage from "@/pages/public/cart"
 import LandingPage from "@/pages/public/landing-page/Index"
 import { TeaProductDetail } from "@/pages/public/product-detail"
 import { Products } from "@/pages/public/products"
@@ -15,5 +16,13 @@ export const publicRouter: Router[] = [
   {
     path: "/san-pham/:slug",
     element: <TeaProductDetail />,
+  },
+  {
+    path: "/cart",
+    element: <CartPage />,
+  },
+  {
+    path: "/gio-hang",
+    element: <CartPage />,
   },
 ]

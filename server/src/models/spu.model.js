@@ -16,6 +16,7 @@ const spuSchema = new Schema({
 
     product_attribute: { type: Array, default: [] },
     product_category: { type: Schema.Types.ObjectId, ref: 'Category' },
+    product_brewing: { type: Array, default: [] },
     product_taste: [
         { type: Schema.Types.ObjectId, ref: 'Taste' }
     ],

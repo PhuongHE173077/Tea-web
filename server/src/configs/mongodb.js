@@ -5,8 +5,6 @@ const { env } = require("./environment");
 const CONNECT_DB = async () => {
   try {
     await mongoose.connect(env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: 50
     });
     console.log("MongoDB connected successfully");

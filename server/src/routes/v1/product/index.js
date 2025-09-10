@@ -12,6 +12,9 @@ router.route('/:id')
     .put(authMiddlewares.isAuthorized, spuController.updateById)
     .delete(authMiddlewares.isAuthorized, spuController.deleteById)
 
+router.route('/related/:slug')
+    .get(spuController.getRelatedProducts)
+
 router.route('/:slug')
     .get(spuController.getBySlug)
 

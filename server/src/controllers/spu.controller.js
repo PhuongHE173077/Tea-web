@@ -73,10 +73,32 @@ const updateById = async (req, res, next) => {
     }
 }
 
+const getRelatedProducts = async (req, res, next) => {
+    try {
+        const { slug } = req.params
+        const { limit } = req.query
+
+        if (!slug) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Slug sản phẩm không được để trống!")
+        }
+
+        const limitNumber = limit ? parseInt(limit) : 8
+        if (limitNumber < 1 || limitNumber > 20) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Limit phải từ 1 đến 20!")
+        }
+
+        const relatedProducts = await spuService.getRelatedProductsBySlug(slug, limitNumber)
+        res.status(StatusCodes.OK).json(relatedProducts)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const spuController = {
     createNew,
     getAllSpu,
     getBySlug,
     deleteById,
-    updateById
+    updateById,
+    getRelatedProducts
 }

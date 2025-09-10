@@ -19,6 +19,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'sans': ['Inter', 'system-ui', 'sans-serif'], // Font mặc định cho toàn bộ website
 				'serif': ['Playfair Display', 'serif'],
 				'elegant': ['Cormorant Garamond', 'serif'],
 			},
