@@ -150,5 +150,185 @@ declare global {
         }[];
     }
 
+    // Landing Page Types
+    interface LandingPageHeader {
+        title: string;
+        detail: string;
+        imageCover: string;
+        attribute: any[];
+        isActive: boolean;
+    }
+
+    interface LandingPageAboutAttribute {
+        icon: string;
+        title: string;
+        detail: string;
+    }
+
+    interface LandingPageAboutSection {
+        title: string;
+        detail: string;
+        attribute: LandingPageAboutAttribute[];
+        isActive: boolean;
+    }
+
+    interface LandingPageVideo {
+        url: string;
+        isActive: boolean;
+    }
+
+    interface LandingPageMainSectionItem {
+        title: string;
+        detail: string;
+        imageCover: string;
+        isActive: boolean;
+    }
+
+    interface LandingPageEventSubSection {
+        title: string;
+        detail: string;
+    }
+
+    interface LandingPageEventSection {
+        tag: string[];
+        title: string;
+        detail: string;
+        imageCol1: string[];
+        imageCol2: string[];
+        subSection: LandingPageEventSubSection[];
+        isActive: boolean;
+    }
+
+    interface LandingPageCarousel {
+        title: string;
+        detail: string;
+        carouselList: string[];
+        isActive: boolean;
+    }
+
+    interface LandingPage {
+        _id: string;
+        header: LandingPageHeader;
+        aboutSection: LandingPageAboutSection;
+        video: LandingPageVideo;
+        mainSection: LandingPageMainSectionItem[];
+        eventSection: LandingPageEventSection;
+        carousel: LandingPageCarousel;
+        createdAt: string;
+        updatedAt: string;
+    }
+
+    interface LandingPageFormData {
+        header?: Partial<LandingPageHeader>;
+        aboutSection?: Partial<LandingPageAboutSection>;
+        video?: Partial<LandingPageVideo>;
+        mainSection?: LandingPageMainSectionItem[];
+        eventSection?: Partial<LandingPageEventSection>;
+        carousel?: Partial<LandingPageCarousel>;
+    }
+
+    // Company Info Types
+    interface SocialMediaInfo {
+        url: string;
+        name: string;
+        isActive: boolean;
+    }
+
+    interface CompanyInfo {
+        _id: string;
+        company_name: string;
+        company_description: string;
+        company_address: string;
+        company_phone: string;
+        company_email: string;
+        company_facebook: SocialMediaInfo;
+        company_instagram: SocialMediaInfo;
+        company_youtube: SocialMediaInfo;
+        company_tiktok: SocialMediaInfo;
+        company_twitter: SocialMediaInfo;
+        company_linkedin: SocialMediaInfo;
+        company_shopee: SocialMediaInfo;
+        company_zalo: SocialMediaInfo;
+        createdAt: string;
+        updatedAt: string;
+    }
+
+    interface CompanyInfoFormData {
+        company_name: string;
+        company_description: string;
+        company_address: string;
+        company_phone: string;
+        company_email: string;
+        company_facebook: SocialMediaInfo;
+        company_instagram: SocialMediaInfo;
+        company_youtube: SocialMediaInfo;
+        company_tiktok: SocialMediaInfo;
+        company_twitter: SocialMediaInfo;
+        company_linkedin: SocialMediaInfo;
+        company_shopee: SocialMediaInfo;
+        company_zalo: SocialMediaInfo;
+    }
+
+    interface CompanyInfoUpdateData {
+        company_name?: string;
+        company_description?: string;
+        company_address?: string;
+        company_phone?: string;
+        company_email?: string;
+        company_facebook?: SocialMediaInfo;
+        company_instagram?: SocialMediaInfo;
+        company_youtube?: SocialMediaInfo;
+        company_tiktok?: SocialMediaInfo;
+        company_twitter?: SocialMediaInfo;
+        company_linkedin?: SocialMediaInfo;
+        company_shopee?: SocialMediaInfo;
+        company_zalo?: SocialMediaInfo;
+    }
+
+    interface CompanyInfoQueryParams {
+        page?: number;
+        limit?: number;
+        search?: string;
+        sortBy?: 'company_name' | 'createdAt' | 'updatedAt';
+        sortOrder?: 'asc' | 'desc';
+    }
+
+    interface CompanyInfoResponse {
+        success: boolean;
+        message: string;
+        data: CompanyInfo[];
+        pagination: {
+            currentPage: number;
+            totalPages: number;
+            totalItems: number;
+            itemsPerPage: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }
+
+    interface CompanyInfoSingleResponse {
+        success: boolean;
+        message: string;
+        data: CompanyInfo;
+    }
+
+    interface CompanyInfoStats {
+        total: number;
+        activeCompanies: number;
+        inactiveCompanies: number;
+    }
+
+    interface CompanyInfoStatsResponse {
+        success: boolean;
+        message: string;
+        data: CompanyInfoStats;
+    }
+
+    interface SocialMediaStatusUpdate {
+        platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'twitter' | 'linkedin' | 'shopee' | 'zalo';
+        isActive: boolean;
+    }
+
 
 }

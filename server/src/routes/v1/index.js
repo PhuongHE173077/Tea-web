@@ -9,6 +9,8 @@ import { imageRouter } from './Image'
 import { effectRoutes } from './effect'
 import { tasteRoutes } from './taste'
 import { discountRoutes } from './discount'
+import { landingPageRoutes } from './landing-page'
+import { companyInfoRoutes } from './company-info'
 
 
 const Router = express.Router()
@@ -41,5 +43,11 @@ Router.use('/tastes', tasteRoutes)
 
 //discount APIs
 Router.use('/discount', discountRoutes)
+
+//landing page APIs
+Router.use('/landing-page', landingPageRoutes)
+
+//company info APIs
+Router.use('/company-info', companyInfoRoutes)
 
 export const APIs_V1 = Router

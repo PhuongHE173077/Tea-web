@@ -1,5 +1,5 @@
 import { RouteNavBar } from "@/types/router";
-import { LayoutDashboard, LeafyGreen, ShoppingBag, Tickets, UserRoundCheck, UsersRound } from "lucide-react";
+import { LayoutDashboard, LeafyGreen, PencilIcon, ShoppingBag, Tickets, UserRoundCheck, UsersRound } from "lucide-react";
 
 export const routerNavBar: RouteNavBar[] = [
     {
@@ -71,7 +71,23 @@ export const routerNavBar: RouteNavBar[] = [
                 url: "/rbac/staff",
             },
         ],
-    },
+    }, {
+        title: "Giao diện website",
+        url: "/web-ui",
+        icon: PencilIcon,
+        isActive: false,
+        items: [
+            {
+                title: "Landing page",
+                url: "/web-ui/landing-page"
+            },
+            {
+                title: "Thông tin công ty",
+                url: "/web-ui/company-info"
+            }
+        ]
+    }
+
 ]
 
 

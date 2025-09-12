@@ -5,6 +5,8 @@ import DiscountManagement from "@/pages/admin/discount";
 import ProductManagement from "@/pages/admin/products";
 import AddProduct from "@/pages/admin/products/add.product";
 import UpdateProduct from "@/pages/admin/products/update.product";
+import CompanyInfoManage from "@/pages/admin/web-ui/company-info";
+import LandingPageManagement from "@/pages/admin/web-ui/landing-page";
 import { Router } from "@/types/router";
 
 export const adminRouter: Router[] = [
@@ -35,5 +37,11 @@ export const adminRouter: Router[] = [
     {
         path: "/discount",
         element: <DiscountManagement />
+    }, {
+        path: "/web-ui/landing-page",
+        element: <LandingPageManagement />
+    }, {
+        path: "/web-ui/company-info",
+        element: <CompanyInfoManage />
     }
 ]
