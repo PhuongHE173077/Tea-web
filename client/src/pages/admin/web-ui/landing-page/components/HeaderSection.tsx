@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Save, Plus, X, Image } from "lucide-react"
+import { Save, Plus, X, Image, Upload, Loader2 } from "lucide-react"
 import { toast } from "react-toastify"
+import { uploadSingleImage, isValidImageUrl } from "@/apis/index"
 
 interface HeaderSectionProps {
     data?: LandingPageHeader
@@ -25,6 +26,8 @@ export function HeaderSection({ data, onUpdate, loading }: HeaderSectionProps) {
     })
 
     const [newAttribute, setNewAttribute] = useState("")
+    const [isUploading, setIsUploading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (data) {
@@ -64,6 +67,47 @@ export function HeaderSection({ data, onUpdate, loading }: HeaderSectionProps) {
         }))
     }
 
+    // Handle image upload
+    const handleImageUpload = async (file: File) => {
+        if (!file) return
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, WebP, SVG)")
+            return
+        }
+
+        // Validate file size (max 10MB for header images)
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Kích thước file không được vượt quá 10MB")
+            return
+        }
+
+        setIsUploading(true)
+
+        try {
+            const imageUrl = await uploadSingleImage(file)
+            setFormData(prev => ({ ...prev, imageCover: imageUrl }))
+            toast.success("Upload hình ảnh thành công!")
+        } catch (error) {
+            console.error('Upload error:', error)
+            toast.error("Upload hình ảnh thất bại!")
+        } finally {
+            setIsUploading(false)
+        }
+    }
+
+    // Handle file input change
+    const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            handleImageUpload(file)
+        }
+        // Reset input value to allow selecting the same file again
+        event.target.value = ''
+    }
+
     return (
         <Card className="bg-[hsl(45_36%_92%)]">
             <CardHeader>
@@ -75,40 +119,102 @@ export function HeaderSection({ data, onUpdate, loading }: HeaderSectionProps) {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Tiêu đề *</Label>
-                            <Input
-                                id="title"
-                                value={formData.title || ""}
-                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                placeholder="Nhập tiêu đề header"
-                                required
-                            />
+                        <div>
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Tiêu đề *</Label>
+                                <Input
+                                    id="title"
+                                    value={formData.title || ""}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                    placeholder="Nhập tiêu đề header"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2 mt-2">
+                                <Label htmlFor="detail">Mô tả chi tiết *</Label>
+                                <Textarea
+                                    id="detail"
+                                    value={formData.detail || ""}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, detail: e.target.value }))}
+                                    placeholder="Nhập mô tả chi tiết cho header"
+                                    rows={7}
+                                    required
+                                />
+                            </div>
                         </div>
-
                         <div className="space-y-2">
-                            <Label htmlFor="imageCover">URL Hình ảnh *</Label>
-                            <Input
-                                id="imageCover"
-                                value={formData.imageCover || ""}
-                                onChange={(e) => setFormData(prev => ({ ...prev, imageCover: e.target.value }))}
-                                placeholder="https://example.com/image.jpg"
-                                required
+                            <Label>Hình ảnh Header *</Label>
+
+                            {/* Image Preview */}
+                            <div className="w-full h-48 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                                {formData.imageCover ? (
+                                    <img
+                                        src={formData.imageCover}
+                                        alt="Header preview"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement
+                                            target.style.display = 'none'
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <div className="text-center">
+                                            <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                            <p className="text-sm">Chưa có hình ảnh</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Upload Buttons */}
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="flex-1"
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Đang upload...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4 mr-2" />
+                                            {formData.imageCover ? 'Thay đổi hình ảnh' : 'Upload hình ảnh'}
+                                        </>
+                                    )}
+                                </Button>
+
+                                {formData.imageCover && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setFormData(prev => ({ ...prev, imageCover: '' }))}
+                                        className="text-destructive hover:text-destructive"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Hidden File Input */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileInputChange}
+                                accept="image/*"
+                                className="hidden"
                             />
+
+
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="detail">Mô tả chi tiết *</Label>
-                        <Textarea
-                            id="detail"
-                            value={formData.detail || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, detail: e.target.value }))}
-                            placeholder="Nhập mô tả chi tiết cho header"
-                            rows={4}
-                            required
-                        />
-                    </div>
+
 
                     <div className="space-y-4">
                         <Label>Thuộc tính bổ sung</Label>
@@ -161,6 +267,6 @@ export function HeaderSection({ data, onUpdate, loading }: HeaderSectionProps) {
                     </div>
                 </form>
             </CardContent>
-        </Card>
+        </Card >
     )
 }

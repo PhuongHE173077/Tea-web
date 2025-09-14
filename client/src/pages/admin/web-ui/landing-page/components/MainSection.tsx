@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Save, Plus, Settings, Trash2, Image, MoveUp, MoveDown } from "lucide-react"
+import { Save, Plus, Settings, Trash2, Image, MoveUp, MoveDown, Upload, Loader2, X } from "lucide-react"
 import { toast } from "react-toastify"
+import { isValidImageUrl, uploadSingleImage } from "@/apis/index"
 
 interface MainSectionProps {
     data?: LandingPageMainSectionItem[]
@@ -17,6 +18,8 @@ interface MainSectionProps {
 
 export function MainSection({ data, onUpdate, loading }: MainSectionProps) {
     const [formData, setFormData] = useState<LandingPageMainSectionItem[]>([])
+    const [uploadingStates, setUploadingStates] = useState<{ [key: number]: boolean }>({})
+    const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({})
 
     useEffect(() => {
         if (data) {
@@ -80,6 +83,49 @@ export function MainSection({ data, onUpdate, loading }: MainSectionProps) {
         newFormData[newIndex] = temp
 
         setFormData(newFormData)
+    }
+
+    // Handle image upload
+    const handleImageUpload = async (index: number, file: File) => {
+        if (!file) return
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, WebP, SVG)")
+            return
+        }
+
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Kích thước file không được vượt quá 10MB")
+            return
+        }
+
+        setUploadingStates(prev => ({ ...prev, [index]: true }))
+
+        try {
+            const imageUrl = await uploadSingleImage(file)
+            const newFormData = [...formData]
+            newFormData[index] = { ...newFormData[index], imageCover: imageUrl }
+            setFormData(newFormData)
+            toast.success("Upload hình ảnh thành công!")
+        } catch (error) {
+            console.error('Upload error:', error)
+            toast.error("Upload hình ảnh thất bại!")
+        } finally {
+            setUploadingStates(prev => ({ ...prev, [index]: false }))
+        }
+    }
+
+    // Handle file input change
+    const handleFileInputChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            handleImageUpload(index, file)
+        }
+        // Reset input value to allow selecting the same file again
+        event.target.value = ''
     }
 
     return (
@@ -165,13 +211,76 @@ export function MainSection({ data, onUpdate, loading }: MainSectionProps) {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>URL Hình ảnh *</Label>
-                                                <Input
-                                                    value={item.imageCover}
-                                                    onChange={(e) => handleUpdateItem(index, 'imageCover', e.target.value)}
-                                                    placeholder="https://example.com/image.jpg"
-                                                    required
+                                                <Label>Hình ảnh *</Label>
+
+                                                {/* Image Preview */}
+                                                <div className="w-full h-40 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                                                    {item.imageCover ? (
+                                                        <img
+                                                            src={item.imageCover}
+                                                            alt="Preview"
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement
+                                                                target.style.display = 'none'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                            <div className="text-center">
+                                                                <Image className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                                <p className="text-sm">Chưa có hình ảnh</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Upload Buttons */}
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => fileInputRefs.current[index]?.click()}
+                                                        disabled={uploadingStates[index]}
+                                                        className="flex-1"
+                                                    >
+                                                        {uploadingStates[index] ? (
+                                                            <>
+                                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                                Đang upload...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="h-4 w-4 mr-2" />
+                                                                {item.imageCover ? 'Thay đổi hình ảnh' : 'Upload hình ảnh'}
+                                                            </>
+                                                        )}
+                                                    </Button>
+
+                                                    {item.imageCover && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleUpdateItem(index, 'imageCover', '')}
+                                                            className="text-destructive hover:text-destructive"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+
+                                                {/* Hidden File Input */}
+                                                <input
+                                                    type="file"
+                                                    ref={(el) => fileInputRefs.current[index] = el}
+                                                    onChange={(e) => handleFileInputChange(index, e)}
+                                                    accept="image/*"
+                                                    className="hidden"
                                                 />
+
+
                                             </div>
                                         </div>
 
@@ -187,23 +296,7 @@ export function MainSection({ data, onUpdate, loading }: MainSectionProps) {
                                         </div>
                                     </div>
 
-                                    {/* Image Preview */}
-                                    {item.imageCover && (
-                                        <div className="mt-4">
-                                            <Label className="text-sm">Xem trước hình ảnh:</Label>
-                                            <div className="mt-2 w-32 h-20 bg-muted rounded-lg overflow-hidden">
-                                                <img
-                                                    src={item.imageCover}
-                                                    alt={item.title || "Preview"}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        const target = e.target as HTMLImageElement
-                                                        target.style.display = 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+
                                 </Card>
                             ))}
                         </div>

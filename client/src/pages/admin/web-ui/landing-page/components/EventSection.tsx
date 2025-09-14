@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Save, Plus, X, Calendar, Trash2, Image } from "lucide-react"
+import { Save, Plus, X, Calendar, Trash2, Image, Upload, Loader2 } from "lucide-react"
 import { toast } from "react-toastify"
+import { uploadSingleImage } from "@/apis/index"
 
 interface EventSectionProps {
     data?: LandingPageEventSection
@@ -28,8 +29,14 @@ export function EventSection({ data, onUpdate, loading }: EventSectionProps) {
     })
 
     const [newTag, setNewTag] = useState("")
-    const [newImageCol1, setNewImageCol1] = useState("")
-    const [newImageCol2, setNewImageCol2] = useState("")
+    const [uploadingStates, setUploadingStates] = useState<{
+        col1: { [key: number]: boolean },
+        col2: { [key: number]: boolean }
+    }>({ col1: {}, col2: {} })
+    const fileInputRefs = useRef<{
+        col1: { [key: number]: HTMLInputElement | null },
+        col2: { [key: number]: HTMLInputElement | null }
+    }>({ col1: {}, col2: {} })
 
     useEffect(() => {
         if (data) {
@@ -72,13 +79,10 @@ export function EventSection({ data, onUpdate, loading }: EventSectionProps) {
 
     // Image Column 1 management
     const handleAddImageCol1 = () => {
-        if (newImageCol1.trim()) {
-            setFormData(prev => ({
-                ...prev,
-                imageCol1: [...(prev.imageCol1 || []), newImageCol1.trim()]
-            }))
-            setNewImageCol1("")
-        }
+        setFormData(prev => ({
+            ...prev,
+            imageCol1: [...(prev.imageCol1 || []), ""] // Add empty string for new upload slot
+        }))
     }
 
     const handleRemoveImageCol1 = (index: number) => {
@@ -90,13 +94,10 @@ export function EventSection({ data, onUpdate, loading }: EventSectionProps) {
 
     // Image Column 2 management
     const handleAddImageCol2 = () => {
-        if (newImageCol2.trim()) {
-            setFormData(prev => ({
-                ...prev,
-                imageCol2: [...(prev.imageCol2 || []), newImageCol2.trim()]
-            }))
-            setNewImageCol2("")
-        }
+        setFormData(prev => ({
+            ...prev,
+            imageCol2: [...(prev.imageCol2 || []), ""] // Add empty string for new upload slot
+        }))
     }
 
     const handleRemoveImageCol2 = (index: number) => {
@@ -133,6 +134,61 @@ export function EventSection({ data, onUpdate, loading }: EventSectionProps) {
             ...prev,
             subSection: prev.subSection?.filter((_, i) => i !== index) || []
         }))
+    }
+
+    // Handle image upload for columns
+    const handleImageUpload = async (column: 'col1' | 'col2', index: number, file: File) => {
+        if (!file) return
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, WebP, SVG)")
+            return
+        }
+
+        // Validate file size (max 5MB for event images)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Kích thước file không được vượt quá 5MB")
+            return
+        }
+
+        setUploadingStates(prev => ({
+            ...prev,
+            [column]: { ...prev[column], [index]: true }
+        }))
+
+        try {
+            const imageUrl = await uploadSingleImage(file)
+            const columnKey = column === 'col1' ? 'imageCol1' : 'imageCol2'
+            const currentImages = formData[columnKey] || []
+            const newImages = [...currentImages]
+            newImages[index] = imageUrl
+
+            setFormData(prev => ({
+                ...prev,
+                [columnKey]: newImages
+            }))
+            toast.success("Upload hình ảnh thành công!")
+        } catch (error) {
+            console.error('Upload error:', error)
+            toast.error("Upload hình ảnh thất bại!")
+        } finally {
+            setUploadingStates(prev => ({
+                ...prev,
+                [column]: { ...prev[column], [index]: false }
+            }))
+        }
+    }
+
+    // Handle file input change
+    const handleFileInputChange = (column: 'col1' | 'col2', index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            handleImageUpload(column, index, file)
+        }
+        // Reset input value to allow selecting the same file again
+        event.target.value = ''
     }
 
     return (
@@ -215,73 +271,184 @@ export function EventSection({ data, onUpdate, loading }: EventSectionProps) {
                         {/* Image Column 1 */}
                         <div className="space-y-4">
                             <Label className="text-base font-semibold">Hình ảnh cột 1</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    value={newImageCol1}
-                                    onChange={(e) => setNewImageCol1(e.target.value)}
-                                    placeholder="URL hình ảnh"
-                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageCol1())}
-                                />
-                                <Button type="button" onClick={handleAddImageCol1} variant="outline">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
-                            </div>
 
                             {formData.imageCol1 && formData.imageCol1.length > 0 && (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {formData.imageCol1.map((img, index) => (
-                                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                                            <Image className="h-4 w-4" />
-                                            <span className="flex-1 text-sm truncate">{img}</span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleRemoveImageCol1(index)}
-                                                className="text-destructive hover:text-destructive"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
+                                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                                            {/* Image Preview */}
+                                            <div className="w-1/3 h-32 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                                                {img ? (
+                                                    <img
+                                                        src={img}
+                                                        alt={`Column 1 Image ${index + 1}`}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            const target = e.target as HTMLImageElement
+                                                            target.style.display = 'none'
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                        <div className="text-center">
+                                                            <Image className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                                                            <p className="text-xs">Chưa có hình ảnh</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 w-1/3">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => fileInputRefs.current.col1[index]?.click()}
+                                                    disabled={uploadingStates.col1[index]}
+                                                    className="flex-1"
+                                                >
+                                                    {uploadingStates.col1[index] ? (
+                                                        <>
+                                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                            Đang upload...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="h-4 w-4 mr-2" />
+                                                            {img ? 'Thay đổi' : 'Upload'}
+                                                        </>
+                                                    )}
+                                                </Button>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleRemoveImageCol1(index)}
+                                                    className="text-destructive hover:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            {/* Upload/Delete Buttons */}
+
+
+                                            {/* Hidden File Input */}
+                                            <input
+                                                type="file"
+                                                ref={(el) => fileInputRefs.current.col1[index] = el}
+                                                onChange={(e) => handleFileInputChange('col1', index, e)}
+                                                accept="image/*"
+                                                className="hidden"
+                                            />
+
+
+
                                         </div>
                                     ))}
                                 </div>
                             )}
+
+                            {/* Add New Image Button */}
+                            <Button
+                                type="button"
+                                onClick={handleAddImageCol1}
+                                variant="outline"
+                                className="w-full"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Thêm hình ảnh mới
+                            </Button>
                         </div>
 
                         {/* Image Column 2 */}
                         <div className="space-y-4">
                             <Label className="text-base font-semibold">Hình ảnh cột 2</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    value={newImageCol2}
-                                    onChange={(e) => setNewImageCol2(e.target.value)}
-                                    placeholder="URL hình ảnh"
-                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageCol2())}
-                                />
-                                <Button type="button" onClick={handleAddImageCol2} variant="outline">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
-                            </div>
 
                             {formData.imageCol2 && formData.imageCol2.length > 0 && (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {formData.imageCol2.map((img, index) => (
-                                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                                            <Image className="h-4 w-4" />
-                                            <span className="flex-1 text-sm truncate">{img}</span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleRemoveImageCol2(index)}
-                                                className="text-destructive hover:text-destructive"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
+                                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                                            {/* Image Preview */}
+                                            <div className="w-1/3 h-32 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                                                {img ? (
+                                                    <img
+                                                        src={img}
+                                                        alt={`Column 2 Image ${index + 1}`}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            const target = e.target as HTMLImageElement
+                                                            target.style.display = 'none'
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                        <div className="text-center">
+                                                            <Image className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                                                            <p className="text-xs">Chưa có hình ảnh</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Upload/Delete Buttons */}
+                                            <div className=" w-1/3 flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => fileInputRefs.current.col2[index]?.click()}
+                                                    disabled={uploadingStates.col2[index]}
+                                                    className="flex-1"
+                                                >
+                                                    {uploadingStates.col2[index] ? (
+                                                        <>
+                                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                            Đang upload...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="h-4 w-4 mr-2" />
+                                                            {img ? 'Thay đổi' : 'Upload'}
+                                                        </>
+                                                    )}
+                                                </Button>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleRemoveImageCol2(index)}
+                                                    className="text-destructive hover:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+
+                                            {/* Hidden File Input */}
+                                            <input
+                                                type="file"
+                                                ref={(el) => fileInputRefs.current.col2[index] = el}
+                                                onChange={(e) => handleFileInputChange('col2', index, e)}
+                                                accept="image/*"
+                                                className="hidden"
+                                            />
+
+
                                         </div>
                                     ))}
                                 </div>
                             )}
+
+                            {/* Add New Image Button */}
+                            <Button
+                                type="button"
+                                onClick={handleAddImageCol2}
+                                variant="outline"
+                                className="w-full"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Thêm hình ảnh mới
+                            </Button>
                         </div>
                     </div>
 

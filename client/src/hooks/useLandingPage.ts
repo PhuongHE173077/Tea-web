@@ -105,7 +105,16 @@ export const useLandingPage = () => {
     const updateEventSection = async (data: Partial<LandingPageEventSection>) => {
         try {
             setLoading(true);
-            const response = await updateEventSectionAPI(data);
+
+            const dataUpdate = {
+                ...data,
+                subSection: data.subSection?.map(sub => ({
+                    title: sub.title,
+                    detail: sub.detail
+                }))
+            }
+
+            const response = await updateEventSectionAPI(dataUpdate);
             setLandingPage(response.data.data);
             toast.success('Cập nhật phần sự kiện thành công!');
             return response.data.data;

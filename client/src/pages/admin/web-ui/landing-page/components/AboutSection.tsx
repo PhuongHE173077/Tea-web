@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Save, Plus, X, FileText, Trash2 } from "lucide-react"
+import { Save, Plus, X, FileText, Trash2, Image, Upload, Loader2 } from "lucide-react"
 import { toast } from "react-toastify"
+import { isValidImageUrl, uploadSingleImage } from "@/apis/index"
 
 interface AboutSectionProps {
     data?: LandingPageAboutSection
@@ -22,6 +23,9 @@ export function AboutSection({ data, onUpdate, loading }: AboutSectionProps) {
         attribute: [],
         isActive: true
     })
+
+    const [uploadingStates, setUploadingStates] = useState<{ [key: number]: boolean }>({})
+    const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({})
 
     useEffect(() => {
         if (data) {
@@ -71,6 +75,47 @@ export function AboutSection({ data, onUpdate, loading }: AboutSectionProps) {
             ...prev,
             attribute: prev.attribute?.filter((_, i) => i !== index) || []
         }))
+    }
+
+    // Handle icon upload
+    const handleIconUpload = async (index: number, file: File) => {
+        if (!file) return
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, WebP, SVG)")
+            return
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Kích thước file không được vượt quá 5MB")
+            return
+        }
+
+        setUploadingStates(prev => ({ ...prev, [index]: true }))
+
+        try {
+            const imageUrl = await uploadSingleImage(file)
+            handleUpdateAttribute(index, 'icon', imageUrl)
+            toast.success("Upload icon thành công!")
+        } catch (error) {
+            console.error('Upload error:', error)
+            toast.error("Upload icon thất bại!")
+        } finally {
+            setUploadingStates(prev => ({ ...prev, [index]: false }))
+        }
+    }
+
+    // Handle file input change
+    const handleFileInputChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            handleIconUpload(index, file)
+        }
+        // Reset input value to allow selecting the same file again
+        event.target.value = ''
     }
 
     return (
@@ -139,11 +184,55 @@ export function AboutSection({ data, onUpdate, loading }: AboutSectionProps) {
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Icon/Biểu tượng</Label>
-                                                <Input
-                                                    value={attr.icon || ""}
-                                                    onChange={(e) => handleUpdateAttribute(index, 'icon', e.target.value)}
-                                                    placeholder="icon-name hoặc URL"
+
+                                                <div className="flex items-center gap-2">
+                                                    <div className="relative w-full lg:w-16 h-16 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                                                        {attr.icon ? (
+                                                            <img
+                                                                src={attr.icon}
+                                                                alt="Icon preview"
+
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    const target = e.target as HTMLImageElement
+                                                                    target.style.display = 'none'
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full cursor-pointer flex items-center justify-center text-muted-foreground" onClick={() => fileInputRefs.current[index]?.click()}>
+                                                                {uploadingStates[index] ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Image className="h-6 w-6 opacity-50" />
+                                                                )
+                                                                }
+                                                            </div>
+                                                        )}
+
+                                                    </div>
+                                                    {attr.icon && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleUpdateAttribute(index, 'icon', '')}
+                                                            className="text-destructive hover:text-destructive"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+
+                                                {/* Hidden File Input */}
+                                                <input
+                                                    type="file"
+                                                    ref={(el) => fileInputRefs.current[index] = el}
+                                                    onChange={(e) => handleFileInputChange(index, e)}
+                                                    accept="image/*"
+                                                    className="hidden"
                                                 />
+
+
                                             </div>
 
                                             <div className="space-y-2">
