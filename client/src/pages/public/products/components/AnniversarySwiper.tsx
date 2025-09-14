@@ -6,29 +6,20 @@ import { Navigation, Pagination } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
+import { Button } from '@/components/ui/button'
 
-const slides = [
-    {
-        title: "Celebrate Topo Chico's 130th Anniversary",
-        description: "Your favorite mineral water is celebrating 130 years with an epic new video, sweepstakes, and more. Join the party!",
-        background: "/images/carousel/carousel-4.png",
-    },
-    {
-        title: "Limited Edition Flavor",
-        description: "Try our refreshing new flavor – available for a limited time only!",
-        background: "/images/carousel/carousel-2.png",
-    },
-    {
-        title: "Hydrate Boldly",
-        description: "Stay fresh and fizz up your day with Topo Chico's signature mineral blend.",
-        background: "/images/carousel/carousel-3.png",
-    },
-]
 
-export default function AnniversarySwiper() {
+
+export default function AnniversarySwiper({ category }: { category: Category }) {
     const [isLoading, setIsLoading] = useState(true)
-
+    const [slides, setSlides] = useState([])
     useEffect(() => {
+        setSlides([{
+            title: category?.category_name,
+            description: category?.category_description,
+            background: category?.category_image?.url,
+            isActive: category?.category_image?.isActive
+        }])
         const timer = setTimeout(() => {
             setIsLoading(false)
         }, 1000)
@@ -51,15 +42,12 @@ export default function AnniversarySwiper() {
                     {slides.map((slide, index) => (
                         <SwiperSlide key={index}>
                             <div
-                                className="rounded-2xl h-[260px] flex overflow-hidden shadow-lg transition-all duration-300 bg-cover bg-center"
+                                className="rounded-2xl h-[260px] relative flex overflow-hidden shadow-lg transition-all duration-300 bg-cover bg-center"
                                 style={{ backgroundImage: `url(${slide.background})` }}
                             >
                                 <div className="flex-1 p-6 text-white flex flex-col justify-center bg-black/30">
-                                    <h2 className="text-lg md:text-xl font-bold mb-2">{slide.title}</h2>
-                                    <p className="mb-3 text-xs md:text-sm">{slide.description}</p>
-                                    <button className="bg-white text-black px-3 py-1.5 rounded-full font-semibold hover:bg-gray-200 transition w-fit text-xs">
-                                        Let's Go
-                                    </button>
+
+                                    <h2 className="absolute top-1 right-2 py-1 px-2 border rounded-lg text-white text-xl">{slide.title}</h2>
                                 </div>
                             </div>
                         </SwiperSlide>

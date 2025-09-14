@@ -33,11 +33,10 @@ export default function AddProduct() {
         product_images: [],
         product_brewing: [],
         product_attribute: [],
-        product_categories: [],
         tastes: [],
         effects: [],
         product_category: "",
-        product_tea_category: "",
+        product_tea_category: [],
         isPublished: false
     });
 
@@ -276,7 +275,7 @@ export default function AddProduct() {
                             <CardContent className="space-y-3">
                                 <div className="text-sm font-bold"> Thể loại</div>
                                 <Select value={product.product_category} onValueChange={(e) => {
-                                    setProduct(prev => ({ ...prev, product_category: e, product_tea_category: "" }))
+                                    setProduct(prev => ({ ...prev, product_category: e, product_tea_category: [] }))
                                 }}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Chọn thể loại" />
@@ -288,11 +287,11 @@ export default function AddProduct() {
                                     </SelectContent>
                                 </Select>
 
-                                {/* Tea Category Selection - Only show if selected category is tea-related */}
-                                {isSelectedCategoryTea && (
+
+                                {product.product_category ? (isSelectedCategoryTea ? (
                                     <div className="space-y-3">
                                         <div className="text-sm font-bold">Loại trà</div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 grid grid-cols-2 ">
                                             {teaCategories.map((teaCat) => (
                                                 <div key={teaCat._id} className="flex items-center space-x-2">
                                                     <input
@@ -300,8 +299,8 @@ export default function AddProduct() {
                                                         id={`tea-category-${teaCat._id}`}
                                                         name="tea-category"
                                                         value={teaCat._id}
-                                                        checked={product.product_tea_category === teaCat._id}
-                                                        onChange={(e) => setProduct(prev => ({ ...prev, product_tea_category: e.target.value }))}
+                                                        checked={product.product_tea_category.includes(teaCat._id)}
+                                                        onChange={(e) => setProduct(prev => ({ ...prev, product_tea_category: [e.target.value] }))}
                                                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                                                     />
                                                     <label
@@ -314,7 +313,38 @@ export default function AddProduct() {
                                             ))}
                                         </div>
                                     </div>
-                                )}
+                                ) : <div className="space-y-3">
+                                    <div className="text-sm font-bold">Loại trà</div>
+                                    <div className="space-y-2 grid grid-cols-2">
+                                        {teaCategories.map((teaCat) => (
+                                            <div key={teaCat._id} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`tea-category-${teaCat._id}`}
+                                                    name="tea-category"
+                                                    value={teaCat._id}
+                                                    checked={product.product_tea_category.includes(teaCat._id)}
+                                                    onChange={(e) => {
+                                                        if (product.product_tea_category.includes(teaCat._id)) {
+                                                            setProduct(prev => ({ ...prev, product_tea_category: prev.product_tea_category.filter((cat) => cat !== teaCat._id) }))
+                                                            return;
+                                                        }
+                                                        setProduct(prev => ({ ...prev, product_tea_category: [...prev.product_tea_category, e.target.value] }))
+                                                    }}
+                                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <label
+                                                    htmlFor={`tea-category-${teaCat._id}`}
+                                                    className="text-sm font-medium text-gray-700 cursor-pointer"
+                                                >
+                                                    {teaCat.tea_category_name}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                ) : null
+                                }
                             </CardContent>
                             <CardContent className="space-y-3">
                                 <div className="text-sm font-bold"> Trạng thái</div>

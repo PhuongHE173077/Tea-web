@@ -42,9 +42,19 @@ const deleteCategory = async (id) => {
     }
 }
 
+const getBySlug = async (slug) => {
+    try {
+        const category = await Category.findOne({ category_slug: slug })
+        return category
+    } catch (error) {
+        throw error
+    }
+}
+
 export const categoryService = {
     createCategory,
     getCategories,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getBySlug
 }

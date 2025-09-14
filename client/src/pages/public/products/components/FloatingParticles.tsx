@@ -30,7 +30,7 @@ export const FloatingParticles: React.FC = () => {
         resizeCanvas()
         window.addEventListener("resize", resizeCanvas)
 
-        const PARTICLE_COUNT = 40
+        const PARTICLE_COUNT = 20
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             particles.push({
                 x: Math.random() * canvas.width,

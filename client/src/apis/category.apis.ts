@@ -4,6 +4,10 @@ export const fetchCategoriesAPIs = async () => {
     return axiosCustomize.get("/categories")
 }
 
+export const fetchCategoryBySlugAPIs = async (slug: string) => {
+    return axiosCustomize.get(`/categories/slug/${slug}`)
+}
+
 export const createCategoryAPIs = async (categoryData: {
     category_name: string;
     category_description: string;

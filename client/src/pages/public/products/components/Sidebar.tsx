@@ -112,7 +112,7 @@ const SidebarFilter = ({
     };
 
     return (
-        <div className="p-6 h-fit sticky top-4 shadow-xl">
+        <div className="p-6 h-fit sticky top-4 shadow-xl colorDashboard">
             <div className="flex items-center gap-3 mb-8 pb-6 border-b">
                 <Filter className="w-6 h-6 text-green-600" />
                 <h2 className="font-bold text-gray-900 text-xl tracking-wide">Lọc theo danh mục</h2>

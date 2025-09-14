@@ -49,9 +49,20 @@ const deleteCategory = async (req, res, next) => {
     }
 }
 
+const getBySlug = async (req, res, next) => {
+    try {
+        const { slug } = req.params
+        const category = await categoryService.getBySlug(slug)
+        res.status(StatusCodes.OK).json(category)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const categoryController = {
     createNew,
     getCategories,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getBySlug
 }

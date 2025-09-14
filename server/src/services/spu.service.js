@@ -18,6 +18,7 @@ const createNew = async (data) => {
             product_thumb: data.product_thumb ? data.product_thumb : data.product_images[0],
             product_cover: data.product_cover ? data.product_cover : data.product_images[0],
             product_brewing: data.product_brewing,
+            product_tea_category: data.product_tea_category,
             product_taste: data.product_taste,
             product_effects: data.product_effects,
             product_attribute: data.product_attribute,

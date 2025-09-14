@@ -8,6 +8,7 @@ import { fetchEffect, fetchTaste } from "@/apis/attribute.apis";
 import SidebarFilter from "./Sidebar";
 import Pagination from "./Pagination";
 import LoadingSpinner from "./LoadingSpinner";
+import { fetchTeaCategoryAPIs } from "@/apis/tea.category.apis";
 
 interface FilterState {
     categories: string[];
@@ -22,6 +23,7 @@ const TeaProductsLayout = () => {
     const [teas, setTeas] = useState<Product[]>([]);
     const [filteredTeas, setFilteredTeas] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [teaCategories, setTeaCategories] = useState<TeaCategory[]>([]);
     const [tastes, setTastes] = useState<Taste[]>([]);
     const [effects, setEffects] = useState<Effect[]>([]);
 
@@ -45,11 +47,12 @@ const TeaProductsLayout = () => {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [productsRes, categoriesRes, tastesRes, effectsRes] = await Promise.all([
+            const [productsRes, categoriesRes, tastesRes, effectsRes, teaCategoriesRes] = await Promise.all([
                 fetchProductsAPIs({ page: 1, size: 1000, search: "" }), // Fetch all products for client-side filtering
                 fetchCategoriesAPIs(),
                 fetchTaste(),
-                fetchEffect()
+                fetchEffect(),
+                fetchTeaCategoryAPIs()
             ]);
 
             setTeas(productsRes.data);
@@ -58,6 +61,7 @@ const TeaProductsLayout = () => {
             setCategories(categoriesRes.data);
             setTastes(tastesRes.data);
             setEffects(effectsRes.data);
+            setTeaCategories(teaCategoriesRes.data);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {

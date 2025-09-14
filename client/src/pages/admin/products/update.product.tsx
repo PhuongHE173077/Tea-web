@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Upload, Star, ImageIcon, Package, CirclePlusIcon, ChartBarDecreasing, DeleteIcon, Trash2Icon } from 'lucide-react';
+import { Package, CirclePlusIcon, ChartBarDecreasing, Trash2Icon } from 'lucide-react';
 import ImageUpload from './components/image-upload';
 import DialogAddSku from './components/DialogAddSku';
 import { ProductAdd } from './types';
@@ -21,6 +21,7 @@ import InputNumber from '@/components/InputNumber';
 import { fetchProductBySlug, updateProductAPIs } from '@/apis/product.apis';
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
+import { fetchTeaCategoryAPIs } from '@/apis/tea.category.apis';
 
 export default function UpdateProduct() {
     const { slug } = useParams();
@@ -40,29 +41,45 @@ export default function UpdateProduct() {
         tastes: [],
         effects: [],
         product_category: "",
+        product_tea_category: [],
         isPublished: false
     });
 
     const [categories, setCategories] = useState<Category[]>([]);
+    const [teaCategories, setTeaCategories] = useState<TeaCategory[]>([]);
     const [tastes, setTastes] = useState<Taste[]>([]);
     const [effects, setEffects] = useState<Effect[]>([]);
     const [openAddSKU, setOpenAddSKU] = useState(false);
     const [openAddStep, setOpenAddStep] = useState(false);
 
+    // Helper function to check if a category is tea-related
+    const isTeaCategory = (categoryName: string) => {
+        const teaKeywords = ['trà', 'tea', 'chè', 'bạch trà', 'lục trà', 'hồng trà', 'ô long', 'oolong', 'trà xanh', 'trà đen'];
+        return teaKeywords.some(keyword =>
+            categoryName.toLowerCase().includes(keyword.toLowerCase())
+        );
+    };
+
+    // Get selected category name
+    const selectedCategory = categories.find(cat => cat._id === product.product_category);
+    const isSelectedCategoryTea = selectedCategory ? isTeaCategory(selectedCategory.category_name) : false;
+
     // Load dữ liệu ban đầu
     useEffect(() => {
         const loadInitialData = async () => {
             try {
-                // Load categories, tastes, effects
-                const [categoriesRes, tastesRes, effectsRes] = await Promise.all([
+                // Load categories, tastes, effects, tea categories
+                const [categoriesRes, tastesRes, effectsRes, teaCategoriesRes] = await Promise.all([
                     fetchCategoriesAPIs(),
                     fetchTaste(),
-                    fetchEffect()
+                    fetchEffect(),
+                    fetchTeaCategoryAPIs()
                 ]);
 
                 setCategories(categoriesRes.data);
                 setTastes(tastesRes.data);
                 setEffects(effectsRes.data);
+                setTeaCategories(teaCategoriesRes.data);
 
                 // Load product data nếu có slug
                 if (slug) {
@@ -90,6 +107,7 @@ export default function UpdateProduct() {
                         product_category: typeof productData.product_category === 'object'
                             ? productData.product_category._id
                             : productData.product_category || "",
+                        product_tea_category: (productData as any).product_tea_category?.map((tc: any) => tc._id || tc) || [],
                         isPublished: productData.isPublished || false
                     });
                 }
@@ -105,6 +123,12 @@ export default function UpdateProduct() {
     }, [slug]);
 
     const handleSubmit = async () => {
+        // Check if tea category is required but not selected
+        if (isSelectedCategoryTea && !product.product_tea_category) {
+            alert("Vui lòng chọn loại trà cho sản phẩm!")
+            return;
+        }
+
         if (product.product_name === "" || product.product_description === "" || product.product_images.length === 0) {
             toast.error("Vui lòng nhập đầy đủ thông tin!");
             return;
@@ -308,7 +332,7 @@ export default function UpdateProduct() {
                                                     </div>
                                                 </div>
                                                 <div className="">
-                                                    <DeleteIcon
+                                                    <Trash2Icon
                                                         className="w-5 h-5 text-red-500 cursor-pointer hover:text-red-600"
                                                         onClick={() => {
                                                             const updatedSteps = product.product_brewing.filter(
@@ -335,9 +359,9 @@ export default function UpdateProduct() {
                                 <CardTitle className="text-lg">Danh Mục</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                                <div className="text-sm font-bold">Thể loại</div>
+                                <div className="text-sm font-bold"> Thể loại</div>
                                 <Select value={product.product_category} onValueChange={(e) => {
-                                    setProduct(prev => ({ ...prev, product_category: e }))
+                                    setProduct(prev => ({ ...prev, product_category: e, product_tea_category: [] }))
                                 }}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Chọn thể loại" />
@@ -348,6 +372,65 @@ export default function UpdateProduct() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+
+
+                                {product.product_category ? (isSelectedCategoryTea ? (
+                                    <div className="space-y-3">
+                                        <div className="text-sm font-bold">Loại trà</div>
+                                        <div className="space-y-2 grid grid-cols-2 ">
+                                            {teaCategories.map((teaCat) => (
+                                                <div key={teaCat._id} className="flex items-center space-x-2">
+                                                    <input
+                                                        type="radio"
+                                                        id={`tea-category-${teaCat._id}`}
+                                                        name="tea-category"
+                                                        value={teaCat._id}
+                                                        checked={product.product_tea_category.includes(teaCat._id)}
+                                                        onChange={(e) => setProduct(prev => ({ ...prev, product_tea_category: [e.target.value] }))}
+                                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                    />
+                                                    <label
+                                                        htmlFor={`tea-category-${teaCat._id}`}
+                                                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                                                    >
+                                                        {teaCat.tea_category_name}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : <div className="space-y-3">
+                                    <div className="text-sm font-bold">Loại trà</div>
+                                    <div className="space-y-2 grid grid-cols-2">
+                                        {teaCategories.map((teaCat) => (
+                                            <div key={teaCat._id} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`tea-category-${teaCat._id}`}
+                                                    name="tea-category"
+                                                    value={teaCat._id}
+                                                    checked={product.product_tea_category.includes(teaCat._id)}
+                                                    onChange={(e) => {
+                                                        if (product.product_tea_category.includes(teaCat._id)) {
+                                                            setProduct(prev => ({ ...prev, product_tea_category: prev.product_tea_category.filter((cat) => cat !== teaCat._id) }))
+                                                            return;
+                                                        }
+                                                        setProduct(prev => ({ ...prev, product_tea_category: [...prev.product_tea_category, e.target.value] }))
+                                                    }}
+                                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <label
+                                                    htmlFor={`tea-category-${teaCat._id}`}
+                                                    className="text-sm font-medium text-gray-700 cursor-pointer"
+                                                >
+                                                    {teaCat.tea_category_name}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                ) : null
+                                }
                             </CardContent>
                             <CardContent className="space-y-3">
                                 <div className="text-sm font-bold">Trạng thái</div>
@@ -364,28 +447,30 @@ export default function UpdateProduct() {
                                 </Select>
                             </CardContent>
 
-                            <CardContent className="space-y-3">
-                                <TasteSelector tastes={tastes} onSelect={(tastes) => setProduct(prev => ({ ...prev, tastes: tastes.map((t) => t._id) }))} />
-                                <div>
-                                    {product.tastes.length > 0 && <h2 className="font-bold">Hương vị:</h2>}
-                                    <ul className="list-disc ml-6">
-                                        {product.tastes.map((t) => (
-                                            <li key={t}>{tastes.find((taste) => taste._id === t)?.taste_name}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </CardContent>
-                            <CardContent className="space-y-3">
-                                <EffectSelector effects={effects} onSelect={(effects) => setProduct(prev => ({ ...prev, effects: effects }))} />
-                                <div>
-                                    {product.effects.length > 0 && <h2 className="font-bold">Tác dụng:</h2>}
-                                    <ul className="list-disc ml-6">
-                                        {product.effects.map((t) => (
-                                            <li key={t}>{effects.find((effect) => effect._id === t)?.effect_name}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </CardContent>
+                            <div className='grid grid-cols-2'>
+                                <CardContent className="space-y-3">
+                                    <TasteSelector tastes={tastes} onSelect={(tastes) => setProduct(prev => ({ ...prev, tastes: tastes.map((t) => t._id) }))} />
+                                    <div>
+                                        {product.tastes.length > 0 && <h2 className="font-bold">Hương vị:</h2>}
+                                        <ul className="list-disc ml-6">
+                                            {product.tastes.map((t) => (
+                                                <li key={t}>{tastes.find((taste) => taste._id === t)?.taste_name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </CardContent>
+                                <CardContent className="space-y-3">
+                                    <EffectSelector effects={effects} onSelect={(effects) => setProduct(prev => ({ ...prev, effects: effects }))} />
+                                    <div>
+                                        {product.effects.length > 0 && <h2 className="font-bold">Tác dụng :</h2>}
+                                        <ul className="list-disc ml-6">
+                                            {product.effects.map((t) => (
+                                                <li key={t}>{effects.find((effect) => effect._id === t)?.effect_name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </CardContent>
+                            </div>
                         </Card>
 
                         {/* Actions */}

@@ -14,4 +14,7 @@ router.route('/:id')
     .post(authMiddlewares.isAuthorized, categoryController.updateCategory)
     .delete(authMiddlewares.isAuthorized, categoryController.deleteCategory)
 
+router.route('/slug/:slug')
+    .get(categoryController.getBySlug)
+
 export const categoryRoutes = router
