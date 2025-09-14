@@ -10,7 +10,7 @@ export const publicRouter: Router[] = [
     element: <LandingPage />,
   },
   {
-    path: "/san-pham",
+    path: "/:slug",
     element: <Products />,
   },
   {

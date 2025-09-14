@@ -9,5 +9,7 @@ const router = express.Router()
 router.route('/viewAny')
     .get(authMiddlewares.isAuthorized, rbacMiddlewares.grantAccess('readAny', 'profile'), userController.viewAnyProfile)
 
+router.route("/me")
+    .get(authMiddlewares.isAuthorized, userController.viewMyProfile)
 
 export const userRoutes = router

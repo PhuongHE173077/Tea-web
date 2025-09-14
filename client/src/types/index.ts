@@ -43,6 +43,11 @@ declare global {
         category_name: string
         category_slug: string
         category_description: string
+        category_icon?: string
+        category_image?: {
+            url?: string
+            isActive?: boolean
+        }
         status: "active" | "inactive"
         createdAt: string
         updatedAt: string
@@ -202,7 +207,12 @@ declare global {
     interface LandingPageCarousel {
         title: string;
         detail: string;
-        carouselList: string[];
+        carouselList: {
+            title: string;
+            detail: string;
+            imageCover: string;
+            tab: string;
+        }[];
         isActive: boolean;
     }
 
@@ -330,5 +340,14 @@ declare global {
         isActive: boolean;
     }
 
+    interface TeaCategory {
+        _id: string;
+        tea_category_name: string;
+        tea_category_slug: string;
+        tea_category_description: string;
+        status: 'active' | 'inactive';
+        createdAt: string;
+        updatedAt: string;
+    }
 
 }

@@ -21,6 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import ImageUpload from "@/components/ui/image-upload"
 
 
 interface UpdateCategoryDialogProps {
@@ -36,14 +37,40 @@ export default function UpdateCategoryDialog({
     open,
     setOpen,
 }: UpdateCategoryDialogProps) {
-    const [formData, setFormData] = useState<Category>(category)
+    const [formData, setFormData] = useState<Category>({
+        ...category,
+        category_icon: category.category_icon || "",
+        category_image: category.category_image || { url: "", isActive: true }
+    })
 
-    const handleChange = (field: keyof Category, value: string) => {
+    const handleChange = (field: keyof Category, value: string | { url: string; isActive: boolean }) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }))
     }
+
+    const handleImageUrlChange = (url: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            category_image: {
+                ...prev.category_image,
+                url: url
+            }
+        }))
+    }
+
+    const handleImageActiveChange = (isActive: boolean) => {
+        setFormData((prev) => ({
+            ...prev,
+            category_image: {
+                ...prev.category_image,
+                isActive: isActive
+            }
+        }))
+    }
+
+
 
     const handleSubmit = () => {
         onUpdate({
@@ -56,7 +83,7 @@ export default function UpdateCategoryDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
 
-            <DialogContent className="sm:max-w-lg rounded-2xl">
+            <DialogContent className="sm:max-w-lg rounded-2xl max-h-[95vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Cập nhật danh mục</DialogTitle>
                     <DialogDescription>
@@ -83,6 +110,34 @@ export default function UpdateCategoryDialog({
                                 handleChange("category_description", e.target.value)
                             }
                         />
+                    </div>
+
+                    <ImageUpload
+                        label="Icon"
+                        value={formData.category_icon || ""}
+                        onChange={(url) => handleChange("category_icon", url)}
+                        placeholder="URL icon hoặc upload file"
+                        previewSize="sm"
+                    />
+
+                    <div className="space-y-2">
+                        <ImageUpload
+                            label="Hình ảnh"
+                            value={formData.category_image?.url || ""}
+                            onChange={handleImageUrlChange}
+                            placeholder="URL hình ảnh hoặc upload file"
+                            previewSize="md"
+                        />
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="image-active"
+                                checked={formData.category_image?.isActive ?? true}
+                                onChange={(e) => handleImageActiveChange(e.target.checked)}
+                                className="rounded"
+                            />
+                            <Label htmlFor="image-active" className="text-sm">Kích hoạt hình ảnh</Label>
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label>Trạng thái</Label>

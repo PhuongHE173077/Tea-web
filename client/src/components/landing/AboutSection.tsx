@@ -25,35 +25,36 @@ const features = [
   }
 ]
 
-const AboutSection = () => {
+const AboutSection = ({ landingInfo }: { landingInfo: LandingPage }) => {
   return (
     <Reveal>
       <section id="gioi-thieu" className="pt-20 bg-gradient-hero">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
-              Câu Chuyện Của Chúng Tôi
+            <h2 className="text-4xl md:text-5xl  font-bold mb-4 text-foreground">
+              {landingInfo?.aboutSection?.title}
             </h2>
-            <p className="text-xl font-elegant text-muted-foreground max-w-3xl mx-auto">
-              Từ những vùng đất trà thiêng liêng, chúng tôi mang đến cho bạn những hương vị trà tinh túy nhất,
-              được chế tác bằng tâm huyết và truyền thống hàng thế kỷ
+            <p className="text-xl  text-muted-foreground max-w-3xl mx-auto">
+              {landingInfo?.aboutSection?.detail}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {features.map((feature, index) => (
+            {landingInfo?.aboutSection?.attribute?.map((feature, index) => (
               <Card key={index} className="group bg-secondary/60 backdrop-blur border-border/50 hover:shadow-elegant transition-all duration-500">
                 <CardContent className="p-6 text-center">
                   <div className="mb-4 flex justify-center">
-                    <div className="p-4 bg-tea-green/10 rounded-full group-hover:bg-tea-green/20 transition-colors duration-300">
-                      <feature.icon className="h-8 w-8 text-tea-green" />
-                    </div>
+                    {feature.icon && <img
+                      src={feature.icon}
+                      alt={feature.title}
+                      className="w-16 h-16 object-cover group-hover:scale-105 transition-transform duration-500"
+                    />}
                   </div>
-                  <h3 className="font-serif font-bold text-xl mb-3 text-foreground group-hover:text-tea-green transition-colors">
+                  <h3 className="font-bold text-xl mb-3 text-foreground group-hover:text-tea-green transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground font-elegant leading-relaxed">
-                    {feature.description}
+                  <p className="text-muted-foreground  leading-relaxed">
+                    {feature.detail}
                   </p>
                 </CardContent>
               </Card>

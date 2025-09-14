@@ -13,6 +13,14 @@ export const LoginUserAPIs = createAsyncThunk(
   }
 );
 
+export const fetchUserAPIs = createAsyncThunk(
+  "user/fetchUser",
+  async () => {
+    const result = await axiosCustomize.get("/user/me");
+    return result.data
+  }
+);
+
 export const logoutUserAPIs = createAsyncThunk("user/logout", async () => {
   const result = await axiosCustomize.delete("/logout");
   return result.data

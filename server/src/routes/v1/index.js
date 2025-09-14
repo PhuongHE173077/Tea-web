@@ -11,6 +11,7 @@ import { tasteRoutes } from './taste'
 import { discountRoutes } from './discount'
 import { landingPageRoutes } from './landing-page'
 import { companyInfoRoutes } from './company-info'
+import { teaCategoryRoutes } from './tea-category'
 
 
 const Router = express.Router()
@@ -49,5 +50,8 @@ Router.use('/landing-page', landingPageRoutes)
 
 //company info APIs
 Router.use('/company-info', companyInfoRoutes)
+
+//tea category APIs
+Router.use('/tea-categories', teaCategoryRoutes)
 
 export const APIs_V1 = Router

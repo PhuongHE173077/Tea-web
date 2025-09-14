@@ -49,7 +49,7 @@ export function NavMain({
                         <SidebarMenuItem>
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton tooltip={item.title}
-                                    className={location.pathname.startsWith(item.url) ? "bg-[hsl(142_40%_62%)]" : ""}
+                                    className={location.pathname.startsWith(item.url) ? "bg-green-200 border border-green-500" : ""}
                                     onClick={() => {
                                         item.items && item.items.length > 0 ? null : navigate(item.url)
                                     }}
@@ -63,7 +63,7 @@ export function NavMain({
                                 {item.items && item.items.length > 0 && <SidebarMenuSub>
                                     {item.items?.map((subItem) => (
                                         <SidebarMenuSubItem key={subItem.title}>
-                                            <SidebarMenuSubButton asChild className={location.pathname === subItem.url ? "bg-[hsl(142,32%,70%)] " : ""}>
+                                            <SidebarMenuSubButton asChild className={location.pathname === subItem.url ? "bg-green-100 border border-green-300" : ""}>
                                                 <a href={subItem.url}>
                                                     <span>{subItem.title}</span>
                                                 </a>

@@ -7,7 +7,7 @@ import "swiper/css/free-mode"
 import { motion } from "framer-motion"
 import { Phone, Zap } from "lucide-react"
 
-export default function EventSection() {
+export default function EventSection({ landingInfo }: { landingInfo: LandingPage }) {
     const images = [
         "/images/event/image-1.png",
         "/images/event/image-2.png",
@@ -22,50 +22,54 @@ export default function EventSection() {
             <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                 {/* Left Content */}
                 <div>
-                    <p className="text-sm text-black uppercase tracking-wide">#My Customers</p>
-                    <h2 className="text-4xl font-bold mt-3 leading-snug">
-                        Những sự kiện <br /> chúng tôi đã thực hiện
-                    </h2>
+                    <p className="text-sm text-black uppercase tracking-wide">
+                        {
+                            landingInfo?.eventSection?.tag?.map((tag, index) => <span key={index}>#{tag} </span>)
+                        }
+                    </p>
+                    {(() => {
+                        const title = landingInfo?.eventSection?.title || "";
+                        const words = title.split(" ");
+                        const firstPart = words.slice(0, 3).join(" ");
+                        const secondPart = words.slice(3).join(" ");
+
+                        return (
+                            <h2 className="text-4xl font-bold mt-3 leading-snug">
+                                {firstPart} <br />
+                                {secondPart}
+                            </h2>
+                        );
+                    })()}
+
+
                     <p className="mt-4 text-black leading-relaxed">
-                        Từ những sự kiện hàng nghìn người đến các sự kiện VIP, với các đối tác là
-                        chính phủ, doanh nghiệp, hiệp hội hay nhãn hàng
+                        {
+                            landingInfo?.eventSection?.detail
+                        }
                     </p>
 
                     {/* Stats */}
                     <div className="mt-10 flex gap-10">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className="flex items-center gap-3"
-                        >
-                            <div className="bg-blue-500/10 p-4 rounded-full">
-                                <Phone className="w-6 h-6 text-blue-400" />
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold">Từ 2006</p>
-                                <p className="text-black-400 text-sm">
-                                    Sự kiện đầu tiên chúng tôi thực hiện là Lễ Hội Trà Đà Lạt 2006
-                                </p>
-                            </div>
-                        </motion.div>
+                        {landingInfo?.eventSection?.subSection?.map((sb, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6 }}
+                                className="flex items-center gap-3"
+                            >
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8 }}
-                            className="flex items-center gap-3"
-                        >
-                            <div className="bg-yellow-500/10 p-4 rounded-full">
-                                <Zap className="w-6 h-6 text-yellow-400" />
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold">+100</p>
-                                <p className="text-black-400 text-sm">
-                                    Hàng trăm khách mời là chính khách và người nổi tiếng
-                                </p>
-                            </div>
-                        </motion.div>
+                                <div>
+                                    <p className="text-xl font-bold">{sb.title}</p>
+                                    <p className="text-black-400 text-sm">
+                                        {sb.detail}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))
+
+                        }
+
                     </div>
                 </div>
 
@@ -90,7 +94,7 @@ export default function EventSection() {
                             allowTouchMove={false}
                             className="h-full"
                         >
-                            {imagesCopy.map((src, i) => (
+                            {landingInfo?.eventSection?.imageCol1?.map((src, i) => (
                                 <SwiperSlide key={i}>
                                     <img
                                         src={src}
@@ -120,7 +124,7 @@ export default function EventSection() {
                             allowTouchMove={false}
                             className="h-full"
                         >
-                            {imagesCopy.map((src, i) => (
+                            {landingInfo?.eventSection?.imageCol2.map((src, i) => (
                                 <SwiperSlide key={i}>
                                     <img
                                         src={src}

@@ -7,6 +7,8 @@ const createNew = async (req, res, next) => {
         const newCategory = {
             category_name: req.body.category_name,
             category_slug: slugify(req.body.category_name),
+            category_icon: req.body.category_icon,
+            category_image: req.body.category_image,
             category_description: req.body.category_description,
             status: req.body.status || "active"
         }

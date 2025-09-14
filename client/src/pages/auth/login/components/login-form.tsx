@@ -15,6 +15,8 @@ import { useDispatch } from "react-redux"
 import { useForm } from "react-hook-form"
 import { LoginUserAPIs } from "@/store/slice/userSlice"
 import { useAppDispatch } from "@/hooks/useDispatch"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
 
 type LoginFormInputs = {
     email: string
@@ -25,7 +27,8 @@ export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
-    const dispatch = useAppDispatch()
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const {
         register,
@@ -36,7 +39,13 @@ export function LoginForm({
     // Hàm submit
     const onSubmit = (data: LoginFormInputs) => {
         dispatch(LoginUserAPIs(data)).then((response) => {
-            console.log("Login response:", response)
+            if (response.meta.requestStatus === 'fulfilled') {
+                toast.success("Đăng nhập thành công!")
+                navigate("/dashboard")
+            } else if (response.meta.requestStatus === 'rejected') {
+                // Error already handled in axios interceptor
+                console.error('Login failed:', response.payload)
+            }
         })
     }
 

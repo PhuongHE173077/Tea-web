@@ -17,27 +17,37 @@ import {
   Menu, MapPin, User, Heart, ShoppingCart, Gift, Search, X
 } from "lucide-react"
 import { getCartItemCount } from "@/utils/cart"
+import { fetchTeaCategoryAPIs } from "@/apis/tea.category.apis"
+import { fetchCategoriesAPIs } from "@/apis/category.apis"
+import { fetchCompanyInfosAPIs } from "@/apis/company-info.apis"
 
 export default function Header() {
   const [cartItemCount, setCartItemCount] = useState(0)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null)
 
-  // Cập nhật số lượng sản phẩm trong giỏ hàng
   const updateCartCount = () => {
     setCartItemCount(getCartItemCount())
   }
 
   useEffect(() => {
-    // Cập nhật số lượng khi component mount
+
+    fetchCategoriesAPIs().then(res => {
+      setCategories(res.data)
+    })
+
+    fetchCompanyInfosAPIs().then(res => {
+      setCompanyInfo(res.data[0])
+    })
+
     updateCartCount()
 
-    // Lắng nghe sự kiện storage để cập nhật khi localStorage thay đổi từ tab khác
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'tea_cart') {
         updateCartCount()
       }
     }
 
-    // Lắng nghe sự kiện custom để cập nhật khi thêm sản phẩm từ cùng tab
     const handleCartUpdate = () => {
       updateCartCount()
     }
@@ -54,7 +64,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b" style={{ backgroundColor: 'hsl(85, 25%, 94%)' }}>
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={() => window.location.href = "/"}>
           <img src="/logo.png" alt="Trà Việt" className="h-10 w-10" />
           <span className="font-bold text-lg" style={{ color: 'hsl(85, 30%, 25%)' }}>{import.meta.env.VITE_APP_NAME}</span>
         </div>
@@ -121,18 +131,15 @@ export default function Header() {
               </SheetHeader>
 
               <div className=" mt-6 flex flex-col space-y-4 text-base " style={{ color: 'hsl(85, 30%, 25%)' }}>
-                <a href="#" className="flex items-center gap-2"><Leaf className="h-5 w-5" /> Trà</a>
-                <a href="#" className="flex items-center gap-2"><Coffee className="h-5 w-5" /> Bộ Ấm Trà</a>
-                <a href="#" className="flex items-center gap-2"><Phone className="h-5 w-5" /> Hạt</a>
-                <a href="#" className="flex items-center gap-2"><Package className="h-5 w-5" /> Quà Tặng</a>
-                <a href="#" className="flex items-center gap-2"><Moon className="h-5 w-5" /> Bánh Trung Thu 2025</a>
-                <a href="#" className="flex items-center gap-2"><Cross className="h-5 w-5" /> Quà Tết 2026</a>
+                {categories?.reverse()?.map((category) => (
+                  <a key={category._id} href={"/" + category.category_slug} className="flex items-center gap-2"><img src={category.category_icon} alt={category.category_name} className="h-5 w-5" /> {category.category_name}</a>
+                ))}
               </div>
 
               <div className="mt-6 space-y-3 text-sm" style={{ color: 'hsl(85, 20%, 45%)' }}>
                 <a href="#" className="flex items-center gap-2">
                   <Phone className="h-5 w-5" />
-                  0903-037-017
+                  {companyInfo?.company_phone}
                 </a>
                 <a href="#" className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" /> Hệ thống cửa hàng
@@ -154,16 +161,25 @@ export default function Header() {
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between" >
             <nav className="flex items-center gap-6">
-              <a href="#" className="flex items-center gap-1"><Leaf className="h-4 w-4" /> Trà</a>
-              <a href="#" className="flex items-center gap-1"><Coffee className="h-4 w-4" /> Bộ Ấm Trà</a>
-              <a href="#" className="flex items-center gap-1"><Phone className="h-4 w-4" /> Hạt</a>
-              <a href="#" className="flex items-center gap-1"><Package className="h-4 w-4" /> Quà Tặng</a>
-              <a href="#" className="flex items-center gap-1"><Moon className="h-4 w-4" /> Bánh Trung Thu 2025</a>
-              <a href="#" className="flex items-center gap-1"><Cross className="h-4 w-4" /> Quà Tết 2026</a>
+              {
+                categories?.map((category) => (
+                  <a key={category._id} href={"/" + category.category_slug} className="flex items-center gap-2 text-lg  hover:text-red-500">
+                    <img src={category.category_icon} alt={category.category_name} className="h-5 w-5" />  {category.category_name}
+                  </a>
+                ))
+              }
             </nav>
             <div className="flex items-center gap-6">
-              <a href="#" className="flex items-center gap-1"><Phone className="h-4 w-4" /> 0903-037-017</a>
-              <a href="#" className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Hệ thống cửa hàng</a>
+              <a href="#" className="flex items-center gap-1"><Phone className="h-4 w-4" /> {companyInfo?.company_phone}</a>
+              <a href="#" className=" items-center gap-1">
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Hệ thống cửa hàng
+                </div>
+                <div className="structure ">
+                  {companyInfo?.company_address.substring(0, 25) + '...'}
+                </div>
+              </a>
             </div>
           </div>
         </div>

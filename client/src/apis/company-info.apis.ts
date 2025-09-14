@@ -15,7 +15,7 @@ export const fetchCompanyInfosAPIs = async (params?: CompanyInfoQueryParams): Pr
     const queryString = queryParams.toString();
     const url = queryString ? `/company-info?${queryString}` : '/company-info';
 
-    return axiosCustomize.get(url);
+    return (await axiosCustomize.get(url)).data;
 }
 
 /**

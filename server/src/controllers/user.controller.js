@@ -60,8 +60,18 @@ const login = async (req, res, next) => {
     }
 }
 
+const viewMyProfile = async (req, res, next) => {
+    try {
+        const user = await userService.getUserById(req.jwtDecoded._id)
+        res.status(StatusCodes.OK).json(user)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const userController = {
     viewAnyProfile,
     register,
-    login
+    login,
+    viewMyProfile
 }

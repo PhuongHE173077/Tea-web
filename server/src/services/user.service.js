@@ -82,7 +82,17 @@ const login = async (data) => {
     }
 }
 
+const getUserById = async (id) => {
+    try {
+        const user = await User.findById(id).populate('usr_role').lean()
+        return pickUser(user)
+    } catch (error) {
+        throw error
+    }
+}
+
 export const userService = {
     createUser,
-    login
+    login,
+    getUserById
 }

@@ -10,13 +10,26 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Outlet, useLocation, useSearchParams } from "react-router-dom"
+import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { AppSidebar } from "./components/app-sidebar"
 import { routerNavBar } from "@/routers/router.navbar"
 import { Bell } from "lucide-react"
+import { useSelector } from "react-redux"
+import { fetchUserAPIs, selectCurrentUser } from "@/store/slice/userSlice"
+import { useAppDispatch } from "@/hooks/useDispatch"
+import { useEffect } from "react"
 
 export default function DashboardLayout() {
-    const location = useLocation();
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        dispatch(fetchUserAPIs()).then((response) => {
+            if (response.meta.requestStatus === 'rejected' || response.payload.usr_role !== 'admin') {
+                navigate("/dang-nhap")
+            }
+        })
+    }, [dispatch])
     return (
         <SidebarProvider>
             <AppSidebar />

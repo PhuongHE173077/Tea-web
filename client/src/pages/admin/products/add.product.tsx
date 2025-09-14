@@ -21,6 +21,7 @@ import InputNumber from '@/components/InputNumber';
 import { createNewProductAPIs } from '@/apis/product.apis';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { fetchTeaCategoryAPIs } from '@/apis/tea.category.apis';
 
 export default function AddProduct() {
     const [product, setProduct] = useState<ProductAdd>({
@@ -32,19 +33,33 @@ export default function AddProduct() {
         product_images: [],
         product_brewing: [],
         product_attribute: [],
+        product_categories: [],
         tastes: [],
         effects: [],
         product_category: "",
+        product_tea_category: "",
         isPublished: false
     });
 
     const [categories, setCategories] = useState<Category[]>([]);
+    const [teaCategories, setTeaCategories] = useState<TeaCategory[]>([]);
     const [tastes, setTastes] = useState<Taste[]>([]);
     const [effects, setEffects] = useState<Effect[]>([]);
     const [openAddSKU, setOpenAddSKU] = useState(false)
     const [openAddStep, setOpenAddStep] = useState(false)
     const navigate = useNavigate();
 
+    // Helper function to check if a category is tea-related
+    const isTeaCategory = (categoryName: string) => {
+        const teaKeywords = ['trà', 'tea', 'chè', 'bạch trà', 'lục trà', 'hồng trà', 'ô long', 'oolong', 'trà xanh', 'trà đen'];
+        return teaKeywords.some(keyword =>
+            categoryName.toLowerCase().includes(keyword.toLowerCase())
+        );
+    };
+
+    // Get selected category name
+    const selectedCategory = categories.find(cat => cat._id === product.product_category);
+    const isSelectedCategoryTea = selectedCategory ? isTeaCategory(selectedCategory.category_name) : false;
 
     useEffect(() => {
         fetchCategoriesAPIs().then(res => {
@@ -56,10 +71,19 @@ export default function AddProduct() {
         fetchEffect().then(res => {
             setEffects(res.data)
         })
+        fetchTeaCategoryAPIs().then(res => {
+            setTeaCategories(res.data)
+        })
     }, [])
 
 
     const handleSubmit = () => {
+        // Check if tea category is required but not selected
+        if (isSelectedCategoryTea && !product.product_tea_category) {
+            alert("Vui lòng chọn loại trà cho sản phẩm!")
+            return;
+        }
+
         if (product.product_name === "" || product.product_description === "" || product.product_images.length === 0) {
             alert("Vui lòng nhập đầy đủ thông tin !")
         } else {
@@ -252,7 +276,7 @@ export default function AddProduct() {
                             <CardContent className="space-y-3">
                                 <div className="text-sm font-bold"> Thể loại</div>
                                 <Select value={product.product_category} onValueChange={(e) => {
-                                    setProduct(prev => ({ ...prev, product_category: e }))
+                                    setProduct(prev => ({ ...prev, product_category: e, product_tea_category: "" }))
                                 }}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Chọn thể loại" />
@@ -263,6 +287,34 @@ export default function AddProduct() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+
+                                {/* Tea Category Selection - Only show if selected category is tea-related */}
+                                {isSelectedCategoryTea && (
+                                    <div className="space-y-3">
+                                        <div className="text-sm font-bold">Loại trà</div>
+                                        <div className="space-y-2">
+                                            {teaCategories.map((teaCat) => (
+                                                <div key={teaCat._id} className="flex items-center space-x-2">
+                                                    <input
+                                                        type="radio"
+                                                        id={`tea-category-${teaCat._id}`}
+                                                        name="tea-category"
+                                                        value={teaCat._id}
+                                                        checked={product.product_tea_category === teaCat._id}
+                                                        onChange={(e) => setProduct(prev => ({ ...prev, product_tea_category: e.target.value }))}
+                                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                    />
+                                                    <label
+                                                        htmlFor={`tea-category-${teaCat._id}`}
+                                                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                                                    >
+                                                        {teaCat.tea_category_name}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                             <CardContent className="space-y-3">
                                 <div className="text-sm font-bold"> Trạng thái</div>
@@ -280,28 +332,30 @@ export default function AddProduct() {
                                 </Select>
                             </CardContent>
 
-                            <CardContent className="space-y-3">
-                                <TasteSelector tastes={tastes} onSelect={(tastes) => setProduct(prev => ({ ...prev, tastes: tastes.map((t) => t._id) }))} />
-                                <div>
-                                    {product.tastes.length > 0 && <h2 className="font-bold">Hương vị:</h2>}
-                                    <ul className="list-disc ml-6">
-                                        {product.tastes.map((t) => (
-                                            <li key={t}>{tastes.find((taste) => taste._id === t)?.taste_name}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </CardContent>
-                            <CardContent className="space-y-3">
-                                <EffectSelector effects={effects} onSelect={(effects) => setProduct(prev => ({ ...prev, effects: effects }))} />
-                                <div>
-                                    {product.effects.length > 0 && <h2 className="font-bold">Tác dụng :</h2>}
-                                    <ul className="list-disc ml-6">
-                                        {product.effects.map((t) => (
-                                            <li key={t}>{effects.find((effect) => effect._id === t)?.effect_name}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </CardContent>
+                            <div className='grid grid-cols-2'>
+                                <CardContent className="space-y-3">
+                                    <TasteSelector tastes={tastes} onSelect={(tastes) => setProduct(prev => ({ ...prev, tastes: tastes.map((t) => t._id) }))} />
+                                    <div>
+                                        {product.tastes.length > 0 && <h2 className="font-bold">Hương vị:</h2>}
+                                        <ul className="list-disc ml-6">
+                                            {product.tastes.map((t) => (
+                                                <li key={t}>{tastes.find((taste) => taste._id === t)?.taste_name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </CardContent>
+                                <CardContent className="space-y-3">
+                                    <EffectSelector effects={effects} onSelect={(effects) => setProduct(prev => ({ ...prev, effects: effects }))} />
+                                    <div>
+                                        {product.effects.length > 0 && <h2 className="font-bold">Tác dụng :</h2>}
+                                        <ul className="list-disc ml-6">
+                                            {product.effects.map((t) => (
+                                                <li key={t}>{effects.find((effect) => effect._id === t)?.effect_name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </CardContent>
+                            </div>
                         </Card>
 
                         {/* Actions */}

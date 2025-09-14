@@ -53,17 +53,17 @@ const teas = [
   }
 ]
 
-const TeaCarousel = () => {
+const TeaCarousel = ({ landingInfo }: { landingInfo: LandingPage }) => {
   const teaCarousel = [...teas, ...teas]; // Duplicate the array for infinite loop effect
   return (
     <section id="loai-tra" className="py-20 ">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4 text-foreground">
-            Bộ Sưu Tập Trà Cao Cấp
+          <h2 className="text-4xl md:text-5xl  font-bold mb-4 text-foreground">
+            {landingInfo?.carousel?.title}
           </h2>
-          <p className="text-xl font-elegant text-muted-foreground max-w-2xl mx-auto">
-            Những loại trà tinh túy được tuyển chọn từ các vùng đất trà nổi tiếng nhất thế giới
+          <p className="text-xl  text-muted-foreground max-w-2xl mx-auto">
+            {landingInfo?.carousel?.detail}
           </p>
         </div>
 
@@ -101,35 +101,35 @@ const TeaCarousel = () => {
           }}
           className="tea-swiper"
         >
-          {teaCarousel.map((tea) => (
-            <SwiperSlide key={tea.id}>
+          {[...landingInfo?.carousel?.carouselList, ...landingInfo?.carousel?.carouselList].map((tea) => (
+            <SwiperSlide key={tea.title}>
               {/* Swiper injects .swiper-slide-active class to the active slide */}
               <Card className="bg-card/95 border border-tea-green shadow-md transition-all duration-500 group swiper-slide-active:bg-white swiper-slide-active:shadow-2xl swiper-slide-active:scale-[1.06] swiper-slide-active:border-tea-gold">
                 <CardContent className="p-6">
                   <div className="relative overflow-hidden rounded-lg mb-6">
                     <img
-                      src={tea.image}
-                      alt={tea.name}
+                      src={tea.imageCover}
+                      alt={tea.title}
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute top-4 left-4">
+                    {/* <div className="absolute top-4 left-4">
                       <Badge className="bg-tea-gold text-tea-brown font-semibold">
                         {tea.category}
                       </Badge>
-                    </div>
+                    </div> */}
                     <div className="absolute top-4 right-4">
                       <Badge variant="outline" className="bg-card/80 backdrop-blur text-foreground border-border">
-                        {tea.origin}
+                        {tea.tab}
                       </Badge>
                     </div>
                   </div>
 
                   <h3 className="text-2xl font-serif font-bold mb-3 text-foreground group-hover:text-tea-green transition-colors">
-                    {tea.name}
+                    {tea.title}
                   </h3>
 
                   <p className="text-muted-foreground font-elegant leading-relaxed">
-                    {tea.description}
+                    {tea.detail}
                   </p>
                 </CardContent>
               </Card>

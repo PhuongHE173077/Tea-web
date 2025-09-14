@@ -14,6 +14,8 @@ const spuSchema = new Schema({
     product_cover: { type: String, required: true },
     product_basePrice: { type: Number, default: 0 },
 
+    product_tea_category: [{ type: Schema.Types.ObjectId, ref: 'TeaCategory' }],
+
     product_attribute: { type: Array, default: [] },
     product_category: { type: Schema.Types.ObjectId, ref: 'Category' },
     product_brewing: { type: Array, default: [] },

@@ -12,9 +12,11 @@ export interface ProductAdd {
         price: number,
         image: string
     }[],
+    product_categories: TeaCategory[],
     tastes: string[],
     effects: string[],
     product_category: string;
+    product_tea_category: string;
     isPublished: boolean
 }
 

@@ -7,6 +7,11 @@ const categorySchema = new Schema({
     category_name: { type: String, required: true },
     category_slug: { type: String, required: true, unique: true },
     category_description: { type: String, required: true },
+    category_icon: { type: String, required: false },
+    category_image: {
+        url: { type: String, required: false },
+        isActive: { type: Boolean, default: true }
+    },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
 }, {
     timestamps: true,

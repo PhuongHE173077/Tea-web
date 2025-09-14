@@ -4,7 +4,7 @@ import heroImage from "@/assets/hero-tea.jpg"
 import Reveal from "../Reveal"
 import { useEffect, useMemo, useState } from "react"
 
-const Hero = () => {
+const Hero = ({ landingInfo }: { landingInfo: LandingPage }) => {
   const [spotlight, setSpotlight] = useState({ x: 50, y: 40 });
 
   const heroStyle = useMemo(() => ({
@@ -32,19 +32,24 @@ const Hero = () => {
         <Reveal>
           <div className="space-y-6">
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-tight">
-              Trà Thượng Hạng – Trải nghiệm tinh hoa trà Việt
+              {landingInfo?.header?.title}
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl">
-              Bộ sưu tập trà tuyển chọn: Oolong, Trà xanh, Trà sen với hương vị tinh tế, đóng gói sang trọng, phù hợp làm quà biếu và thưởng thức mỗi ngày.
+              {landingInfo?.header?.detail}
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Button size="lg">Khám phá bộ sưu tập</Button>
               <Button size="lg">Tìm hiểu thêm</Button>
             </div>
             <div className="flex items-center gap-6 pt-2 text-sm text-muted-foreground">
-              <div>Giao nhanh 24-48h</div>
-              <div>Miễn phí đổi trả 7 ngày</div>
-              <div>Đóng gói quà tặng</div>
+              {
+                landingInfo?.header?.attribute?.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span>{feature}</span>
+                  </div>
+                ))
+              }
+
             </div>
           </div>
         </Reveal>

@@ -15,7 +15,7 @@ export const routerNavBar: RouteNavBar[] = [
         isActive: false,
         items: [
             {
-                title: "Thể loại sản phẩm",
+                title: "Danh mục sản phẩm",
                 url: "/products/category",
             },
             {
@@ -25,7 +25,10 @@ export const routerNavBar: RouteNavBar[] = [
             {
                 title: "Thuộc tính sản phẩm",
                 url: "/products/attribute",
-            },
+            }, {
+                title: "Các loại trà",
+                url: "/products/tea-category",
+            }
         ],
     },
     {
