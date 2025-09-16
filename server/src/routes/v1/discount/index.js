@@ -8,6 +8,12 @@ const router = express.Router()
 // Public routes - không cần authentication
 router.get('/active', discountController.getActiveDiscounts)
 
+// POST /api/v1/discount/validate - Kiểm tra tính hợp lệ của mã giảm giá (public)
+router.post('/validate',
+    discountValidation.validateDiscountCode,
+    discountController.validateDiscountCode
+)
+
 // Routes cần authentication
 router.use(authMiddlewares.isAuthorized)
 
@@ -21,12 +27,6 @@ router.get('/',
 router.post('/',
     discountValidation.createDiscount,
     discountController.createDiscount
-)
-
-// POST /api/v1/discount/validate - Kiểm tra tính hợp lệ của mã giảm giá
-router.post('/validate',
-    discountValidation.validateDiscountCode,
-    discountController.validateDiscountCode
 )
 
 // GET /api/v1/discount/stats - Lấy thống kê discount

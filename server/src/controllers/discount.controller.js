@@ -93,8 +93,9 @@ const validateDiscountCode = async (req, res, next) => {
     try {
         const { code, order_value, user_id } = req.body
 
-        // Nếu không có user_id trong body, lấy từ JWT token
-        const userId = user_id || req.jwtDecoded?.userId
+        // Nếu không có user_id trong body, lấy từ JWT token (nếu có)
+        // Cho phép validation mà không cần authentication
+        const userId = user_id || req.jwtDecoded?.userId || req.jwtDecoded?._id
 
         const result = await discountService.validateDiscountCode(code, userId, order_value)
 

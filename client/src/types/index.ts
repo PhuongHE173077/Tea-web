@@ -350,4 +350,88 @@ declare global {
         updatedAt: string;
     }
 
+    // Blog Types
+    interface BlogAuthor {
+        _id: string;
+        usr_name: string;
+        usr_avatar?: string;
+        usr_email: string;
+    }
+
+    interface BlogThumbnail {
+        url?: string;
+        alt?: string;
+    }
+
+    interface BlogMeta {
+        title?: string;
+        description?: string;
+        keywords?: string[];
+    }
+
+    interface Blog {
+        _id: string;
+        blog_title: string;
+        blog_slug: string;
+        blog_content: string;
+        blog_excerpt: string;
+        blog_thumbnail?: BlogThumbnail;
+        blog_author: BlogAuthor;
+        blog_category?: Category;
+        blog_tags: string[];
+        blog_status: 'draft' | 'published' | 'archived';
+        blog_published_at?: string;
+        blog_views: number;
+        blog_likes: number;
+        blog_meta?: BlogMeta;
+        blog_featured: boolean;
+        blog_reading_time: number;
+        createdAt: string;
+        updatedAt: string;
+    }
+
+    interface BlogFormData {
+        blog_title: string;
+        blog_content: string;
+        blog_excerpt: string;
+        blog_thumbnail?: BlogThumbnail;
+        blog_category?: string;
+        blog_tags: string[];
+        blog_status: 'draft' | 'published' | 'archived';
+        blog_meta?: BlogMeta;
+        blog_featured: boolean;
+    }
+
+    interface BlogFilters {
+        page?: number;
+        limit?: number;
+        status?: 'draft' | 'published' | 'archived';
+        category?: string;
+        author?: string;
+        featured?: boolean;
+        search?: string;
+        sortBy?: 'createdAt' | 'updatedAt' | 'blog_title' | 'blog_views' | 'blog_likes';
+        sortOrder?: 'asc' | 'desc';
+    }
+
+    interface BlogResponse {
+        success: boolean;
+        message: string;
+        data: Blog[];
+        pagination: {
+            currentPage: number;
+            totalPages: number;
+            totalItems: number;
+            itemsPerPage: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }
+
+    interface BlogSingleResponse {
+        success: boolean;
+        message: string;
+        data: Blog;
+    }
+
 }

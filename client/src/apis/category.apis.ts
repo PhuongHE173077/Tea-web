@@ -4,6 +4,22 @@ export const fetchCategoriesAPIs = async () => {
     return axiosCustomize.get("/categories")
 }
 
+// Get all categories with filters
+export const getAllCategories = async (filters?: { status?: string; page?: number; limit?: number }): Promise<{ data: Category[] }> => {
+    const params = new URLSearchParams();
+
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    const url = `/categories?${params.toString()}`;
+    console.log('Categories API URL:', url);
+    const response = await axiosCustomize.get(url);
+    console.log('Categories API Response:', response);
+    console.log('Categories API Response.data:', response.data);
+    return response.data;
+}
+
 export const fetchCategoryBySlugAPIs = async (slug: string) => {
     return axiosCustomize.get(`/categories/slug/${slug}`)
 }

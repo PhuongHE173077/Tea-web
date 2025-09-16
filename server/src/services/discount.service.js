@@ -225,7 +225,7 @@ const validateDiscountCode = async (code, userId, orderValue) => {
             throw new ApiError(StatusCodes.BAD_REQUEST, 'Discount usage limit reached')
         }
 
-        // Kiểm tra user đã sử dụng chưa
+        // Kiểm tra user đã sử dụng chưa (chỉ khi có userId)
         if (userId && discount.isUsedByUser(userId)) {
             throw new ApiError(StatusCodes.BAD_REQUEST, 'You have already used this discount')
         }

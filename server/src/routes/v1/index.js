@@ -12,6 +12,11 @@ import { discountRoutes } from './discount'
 import { landingPageRoutes } from './landing-page'
 import { companyInfoRoutes } from './company-info'
 import { teaCategoryRoutes } from './tea-category'
+import { blogRoutes } from './blog'
+import { shipRoutes } from './ship'
+import { orderRoutes } from './order'
+import { addressRoutes } from './address'
+import { dashboardRoutes } from './dashboard'
 
 
 const Router = express.Router()
@@ -53,5 +58,20 @@ Router.use('/company-info', companyInfoRoutes)
 
 //tea category APIs
 Router.use('/tea-categories', teaCategoryRoutes)
+
+//blog APIs
+Router.use('/blogs', blogRoutes)
+
+//ship APIs
+Router.use('/ship', shipRoutes)
+
+//order APIs
+Router.use('/orders', orderRoutes)
+
+//address APIs
+Router.use('/address', addressRoutes)
+
+//dashboard APIs
+Router.use('/dashboard', dashboardRoutes)
 
 export const APIs_V1 = Router

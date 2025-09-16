@@ -1,5 +1,5 @@
 import { RouteNavBar } from "@/types/router";
-import { LayoutDashboard, LeafyGreen, PencilIcon, ShoppingBag, Tickets, UserRoundCheck, UsersRound } from "lucide-react";
+import { LayoutDashboard, LeafyGreen, PencilIcon, ShoppingBag, Tickets, UserRoundCheck, UsersRound, FileText, Truck } from "lucide-react";
 
 export const routerNavBar: RouteNavBar[] = [
     {
@@ -36,16 +36,7 @@ export const routerNavBar: RouteNavBar[] = [
         url: "/orders",
         icon: ShoppingBag,
         isActive: false,
-        items: [
-            {
-                title: "Danh sách sản phẩm",
-                url: "/orders/list",
-            },
-            {
-                title: "Thêm sản phẩm",
-                url: "/orders/add",
-            },
-        ],
+
     },
     {
         title: "Customers",
@@ -89,6 +80,16 @@ export const routerNavBar: RouteNavBar[] = [
                 url: "/web-ui/company-info"
             }
         ]
+    }, {
+        title: "Quản lý Blog",
+        url: "/admin/blog",
+        icon: FileText,
+        isActive: false,
+    }, {
+        title: "Quản lý phí ship",
+        url: "/admin/ship",
+        icon: Truck,
+        isActive: false,
     }
 
 ]

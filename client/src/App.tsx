@@ -11,8 +11,13 @@ import { store } from "./store/store";
 import { ToastContainer } from "react-toastify";
 import DashboardLayout from "./layout/admin";
 import { adminRouter } from "./routers/admin.router";
+import { injectStore } from "./services/axios.customize";
 
 const persistor = persistStore(store);
+
+// Inject store into axios
+injectStore(store);
+
 const App = () => (
   <Provider store={store}>
     <PersistGate persistor={persistor}>

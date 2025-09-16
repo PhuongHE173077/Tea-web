@@ -208,6 +208,7 @@ const validateDiscountCode = async (req, res, next) => {
                     'number.positive': 'Order value must be greater than 0'
                 }),
             user_id: Joi.string()
+                .optional()
                 .pattern(/^[0-9a-fA-F]{24}$/)
                 .messages({
                     'string.pattern.base': 'User ID must be a valid ObjectId'

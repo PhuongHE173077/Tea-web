@@ -15,9 +15,21 @@ import CartTable from './components/CartTable'
 import CouponSection from './components/CouponSection'
 import CartSummary from './components/CartSummary'
 
+interface AppliedDiscount {
+    id: string
+    code: string
+    name: string
+    discount_type: "percentage" | "fixed_amount"
+    discount_value: number
+    discount_amount: number
+    min_order_value: number
+    max_discount_amount?: number
+}
+
 export default function CartPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([])
     const [loading, setLoading] = useState(true)
+    const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null)
 
     // Lấy dữ liệu giỏ hàng
     const loadCartData = () => {
@@ -58,6 +70,7 @@ export default function CartPage() {
             if (newQuantity === 0) {
                 toast.success('Đã xóa sản phẩm khỏi giỏ hàng!')
             }
+            // Trigger discount revalidation will be handled by CouponSection useEffect
         } else {
             toast.error('Có lỗi xảy ra khi cập nhật giỏ hàng!')
         }
@@ -72,6 +85,7 @@ export default function CartPage() {
         if (success) {
             loadCartData()
             toast.success('Đã xóa sản phẩm khỏi giỏ hàng!')
+            // Trigger discount revalidation will be handled by CouponSection useEffect
         } else {
             toast.error('Có lỗi xảy ra khi xóa sản phẩm!')
         }
@@ -81,11 +95,16 @@ export default function CartPage() {
     const handleClearCart = () => {
         const success = clearCart()
         if (success) {
+            setAppliedDiscount(null) // Clear discount when cart is cleared
             loadCartData()
             toast.success('Đã xóa toàn bộ giỏ hàng!')
         } else {
             toast.error('Có lỗi xảy ra khi xóa giỏ hàng!')
         }
+    }
+
+    const handleDiscountApplied = (discount: AppliedDiscount | null) => {
+        setAppliedDiscount(discount)
     }
 
     if (loading) {
@@ -132,12 +151,13 @@ export default function CartPage() {
                         handleRemoveItem={handleRemoveItem}
                         loadCartData={loadCartData}
                     />
-                    <CouponSection />
+                    <CouponSection onDiscountApplied={handleDiscountApplied} />
                 </div>
 
                 <CartSummary
                     total={total}
                     formatPrice={formatPrice}
+                    appliedDiscount={appliedDiscount}
                 />
             </div>
         </div>

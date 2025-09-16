@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -81,8 +82,8 @@ export default function Header() {
         </div>
 
         <nav className="hidden md:flex items-center gap-6 text-sm" >
-          <a href="#">Quà Doanh Nghiệp</a>
-          <a href="#">Trà Cao Cấp</a>
+          <Link to="/blog">Blog</Link>
+          <Link to="/tra-cuu-don-hang">Tra cứu đơn hàng</Link>
           <a href="#">Tea Show</a>
           <a href="/gio-hang" className="flex items-center gap-1 relative cursor-pointer">
             <ShoppingCart className="h-5 w-5" />
@@ -147,7 +148,7 @@ export default function Header() {
               </div>
 
               <div className="mt-auto pt-6 border-t text-sm space-y-2" style={{ color: 'hsl(85, 20%, 45%)' }}>
-                <a href="#" className="block">Quà Doanh Nghiệp</a>
+                <Link to="/blog" className="block">Quà Doanh Nghiệp</Link>
                 <a href="#" className="block">Horeca Tea</a>
                 <a href="#" className="block">Tea Show</a>
                 <a href="#" className="block">Về Trà Việt</a>

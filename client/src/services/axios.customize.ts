@@ -14,6 +14,7 @@ export const injectStore = (mainStore: any) => {
 
 axiosCustomize.interceptors.request.use(function (config) {
     // Add any request headers or modifications here
+    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
     return config;
 }, function (error) {
     return Promise.reject(error);
