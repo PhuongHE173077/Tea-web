@@ -19,7 +19,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'sans': ['Inter', 'system-ui', 'sans-serif'], // Font mặc định cho toàn bộ website
+				'sans': ['Nunito Sans', 'system-ui', 'sans-serif'], // Font tương tự UTM Dax - mềm mại và thanh lịch
 				'serif': ['Playfair Display', 'serif'],
 				'elegant': ['Cormorant Garamond', 'serif'],
 			},

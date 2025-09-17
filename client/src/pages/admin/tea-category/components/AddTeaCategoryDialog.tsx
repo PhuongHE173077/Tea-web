@@ -126,3 +126,4 @@ export default function AddTeaCategoryDialog({ onAdd, open, setOpen }: AddTeaCat
         </Dialog>
     )
 }
+

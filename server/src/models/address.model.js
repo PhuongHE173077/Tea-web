@@ -11,8 +11,7 @@ const provinceSchema = new Schema({
     code: {
         type: String,
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     name: {
         type: String,
@@ -61,8 +60,7 @@ const districtSchema = new Schema({
     code: {
         type: String,
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     name: {
         type: String,
@@ -109,20 +107,22 @@ const districtSchema = new Schema({
 });
 
 // Indexes
+provinceSchema.index({ code: 1 }); // Index cho code field
 provinceSchema.index({ name: 'text', full_name: 'text' });
+districtSchema.index({ code: 1 }); // Index cho code field
 districtSchema.index({ name: 'text', full_name: 'text' });
 districtSchema.index({ province_code: 1, is_active: 1 });
 
 // Static methods for Province
-provinceSchema.statics.findActive = function() {
+provinceSchema.statics.findActive = function () {
     return this.find({ is_active: true }).sort({ name: 1 });
 };
 
-provinceSchema.statics.findByCode = function(code) {
+provinceSchema.statics.findByCode = function (code) {
     return this.findOne({ code: code, is_active: true });
 };
 
-provinceSchema.statics.searchByName = function(searchTerm) {
+provinceSchema.statics.searchByName = function (searchTerm) {
     return this.find({
         is_active: true,
         $or: [
@@ -134,23 +134,23 @@ provinceSchema.statics.searchByName = function(searchTerm) {
 };
 
 // Static methods for District
-districtSchema.statics.findByProvinceCode = function(provinceCode) {
-    return this.find({ 
-        province_code: provinceCode, 
-        is_active: true 
+districtSchema.statics.findByProvinceCode = function (provinceCode) {
+    return this.find({
+        province_code: provinceCode,
+        is_active: true
     }).sort({ name: 1 });
 };
 
-districtSchema.statics.findByCode = function(code) {
+districtSchema.statics.findByCode = function (code) {
     return this.findOne({ code: code, is_active: true });
 };
 
-districtSchema.statics.searchByName = function(provinceCode, searchTerm) {
+districtSchema.statics.searchByName = function (provinceCode, searchTerm) {
     const query = {
         province_code: provinceCode,
         is_active: true
     };
-    
+
     if (searchTerm) {
         query.$or = [
             { name: { $regex: searchTerm, $options: 'i' } },
@@ -158,7 +158,7 @@ districtSchema.statics.searchByName = function(provinceCode, searchTerm) {
             { code_name: { $regex: searchTerm, $options: 'i' } }
         ];
     }
-    
+
     return this.find(query).sort({ name: 1 });
 };
 
@@ -171,7 +171,6 @@ const wardSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        index: true,
         trim: true
     },
     name: {
@@ -222,19 +221,20 @@ const wardSchema = new Schema({
 });
 
 // Ward indexes
+wardSchema.index({ code: 1 }); // Index cho code field
 wardSchema.index({ district_code: 1, is_active: 1 });
 wardSchema.index({ name: 'text', full_name: 'text' });
 
 // Ward static methods
-wardSchema.statics.findActive = function(filters = {}) {
+wardSchema.statics.findActive = function (filters = {}) {
     return this.find({ is_active: true, ...filters });
 };
 
-wardSchema.statics.findByDistrictCode = function(districtCode, filters = {}) {
+wardSchema.statics.findByDistrictCode = function (districtCode, filters = {}) {
     return this.findActive({ district_code: districtCode, ...filters });
 };
 
-wardSchema.statics.searchByName = function(searchTerm, districtCode = null) {
+wardSchema.statics.searchByName = function (searchTerm, districtCode = null) {
     const query = {
         is_active: true,
         $or: [

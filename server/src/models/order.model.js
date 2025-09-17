@@ -138,8 +138,7 @@ const orderSchema = new Schema({
     order_trackingNumber: {
         type: String,
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
 
     // Order status
@@ -180,17 +179,17 @@ orderSchema.index({ 'order_customer.phone': 1 })
 orderSchema.index({ order_trackingNumber: 1 })
 
 // Virtual for order total items
-orderSchema.virtual('total_items').get(function() {
+orderSchema.virtual('total_items').get(function () {
     return this.order_products.reduce((total, item) => total + item.quantity, 0)
 })
 
 // Virtual for formatted tracking number
-orderSchema.virtual('formatted_tracking').get(function() {
+orderSchema.virtual('formatted_tracking').get(function () {
     return `#${this.order_trackingNumber}`
 })
 
 // Pre-save middleware to generate tracking number
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
     if (this.isNew && !this.order_trackingNumber) {
         const timestamp = Date.now().toString()
         const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
@@ -209,7 +208,7 @@ orderSchema.pre('save', async function(next) {
 })
 
 // Static method to generate next tracking number
-orderSchema.statics.generateTrackingNumber = async function() {
+orderSchema.statics.generateTrackingNumber = async function () {
     const timestamp = Date.now().toString()
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
     return `${timestamp}${random}`
