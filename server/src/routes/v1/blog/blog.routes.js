@@ -44,7 +44,7 @@ router.get('/slug/:slug', blogController.getBlogBySlug);
  * @access Private (Authenticated users)
  * @body {string} blog_title - Blog title (required, 5-200 chars)
  * @body {string} blog_content - Blog content (required, min 50 chars)
- * @body {string} blog_excerpt - Blog excerpt (required, 10-500 chars)
+ * @body {string} blog_excerpt - Blog excerpt (optional, auto-generated from content)
  * @body {object} blog_thumbnail - Blog thumbnail {url, alt}
  * @body {string} blog_category - Category ID (optional)
  * @body {array} blog_tags - Array of tags (optional)

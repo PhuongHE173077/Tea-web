@@ -7,7 +7,7 @@ const blogSchema = new Schema({
     blog_title: { type: String, required: true, trim: true },
     blog_slug: { type: String, required: true, unique: true, index: true },
     blog_content: { type: String, required: true },
-    blog_excerpt: { type: String, required: true, maxlength: 500 },
+    blog_excerpt: { type: String, required: false, maxlength: 500 },
     blog_thumbnail: {
         url: { type: String, required: false },
         alt: { type: String, default: '' }

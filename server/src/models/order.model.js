@@ -176,7 +176,7 @@ orderSchema.index({ order_userId: 1, createdAt: -1 })
 orderSchema.index({ order_status: 1, createdAt: -1 })
 orderSchema.index({ 'order_customer.email': 1 })
 orderSchema.index({ 'order_customer.phone': 1 })
-orderSchema.index({ order_trackingNumber: 1 })
+// Note: order_trackingNumber already has unique index, no need for additional index
 
 // Virtual for order total items
 orderSchema.virtual('total_items').get(function () {

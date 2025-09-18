@@ -16,6 +16,7 @@ import EditBlog from "@/pages/admin/blog/EditBlog";
 import ShipDashboard from "@/pages/admin/ship/ShipDashboard";
 import CreateShipConfig from "@/pages/admin/ship/CreateShipConfig";
 import EditShipConfig from "@/pages/admin/ship/EditShipConfig";
+import MarkdownTest from "@/pages/debug/MarkdownTest";
 import { Router } from "@/types/router";
 
 export const adminRouter: Router[] = [
@@ -81,5 +82,8 @@ export const adminRouter: Router[] = [
     }, {
         path: "/admin/ship/edit/:id",
         element: <EditShipConfig />
+    }, {
+        path: "/debug/markdown",
+        element: <MarkdownTest />
     }
 ]

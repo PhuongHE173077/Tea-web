@@ -10,6 +10,8 @@ import { getBlogBySlug, getRecentBlogs } from '@/apis/blog.apis';
 import { formatDistanceToNow, format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import SEO from '@/components/SEO';
+import MDEditor from '@uiw/react-md-editor';
+import { generateBlogStructuredData, generatePageTitle } from '@/utils/seo';
 
 const BlogDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -98,7 +100,7 @@ const BlogDetail: React.FC = () => {
         <>
             {/* SEO Meta Tags */}
             <SEO
-                title={blog.blog_meta?.title || blog.blog_title}
+                title={generatePageTitle(blog.blog_meta?.title || blog.blog_title)}
                 description={blog.blog_meta?.description || blog.blog_excerpt}
                 keywords={blog.blog_meta?.keywords?.join(', ') || blog.blog_tags.join(', ')}
                 ogTitle={blog.blog_title}
@@ -110,6 +112,14 @@ const BlogDetail: React.FC = () => {
                 twitterTitle={blog.blog_title}
                 twitterDescription={blog.blog_excerpt}
                 twitterImage={blog.blog_thumbnail?.url}
+                article={{
+                    author: blog.blog_author.usr_name,
+                    publishedTime: blog.blog_published_at || blog.createdAt,
+                    modifiedTime: blog.updatedAt,
+                    section: blog.blog_category?.category_name,
+                    tags: blog.blog_tags
+                }}
+                structuredData={generateBlogStructuredData(blog)}
             />
 
             <div className="container mx-auto px-4 py-8">
@@ -191,10 +201,18 @@ const BlogDetail: React.FC = () => {
                             <Separator className="mb-8" />
 
                             {/* Content */}
-                            <div 
-                                className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
-                                dangerouslySetInnerHTML={{ __html: blog.blog_content }}
-                            />
+                            <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900">
+                                <div data-color-mode="light">
+                                    <MDEditor.Markdown
+                                        source={blog.blog_content}
+                                        style={{
+                                            whiteSpace: 'pre-wrap',
+                                            backgroundColor: 'transparent',
+                                            padding: 0
+                                        }}
+                                    />
+                                </div>
+                            </div>
 
                             {/* Tags */}
                             {blog.blog_tags.length > 0 && (

@@ -13,6 +13,16 @@ interface SEOProps {
     twitterTitle?: string;
     twitterDescription?: string;
     twitterImage?: string;
+    // Structured data for articles
+    article?: {
+        author?: string;
+        publishedTime?: string;
+        modifiedTime?: string;
+        section?: string;
+        tags?: string[];
+    };
+    // JSON-LD structured data
+    structuredData?: any;
 }
 
 const SEO: React.FC<SEOProps> = ({
@@ -27,7 +37,9 @@ const SEO: React.FC<SEOProps> = ({
     twitterCard = 'summary_large_image',
     twitterTitle,
     twitterDescription,
-    twitterImage
+    twitterImage,
+    article,
+    structuredData
 }) => {
     useEffect(() => {
         // Update document title
@@ -72,6 +84,47 @@ const SEO: React.FC<SEOProps> = ({
         updateMetaTag('twitter:description', twitterDescription || ogDescription || description || '');
         updateMetaTag('twitter:image', twitterImage || ogImage || '');
 
+        // Article meta tags (for blog posts)
+        if (article && ogType === 'article') {
+            updateMetaTag('article:author', article.author || '', true);
+            updateMetaTag('article:published_time', article.publishedTime || '', true);
+            updateMetaTag('article:modified_time', article.modifiedTime || '', true);
+            updateMetaTag('article:section', article.section || '', true);
+
+            // Article tags
+            if (article.tags) {
+                // Remove existing article:tag meta tags
+                const existingTags = document.querySelectorAll('meta[property="article:tag"]');
+                existingTags.forEach(tag => tag.remove());
+
+                // Add new article:tag meta tags
+                article.tags.forEach(tag => {
+                    const meta = document.createElement('meta');
+                    meta.setAttribute('property', 'article:tag');
+                    meta.setAttribute('content', tag);
+                    document.head.appendChild(meta);
+                });
+            }
+        }
+
+        // JSON-LD Structured Data
+        const updateStructuredData = () => {
+            // Remove existing JSON-LD script
+            const existingScript = document.querySelector('script[type="application/ld+json"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            if (structuredData) {
+                const script = document.createElement('script');
+                script.type = 'application/ld+json';
+                script.textContent = JSON.stringify(structuredData);
+                document.head.appendChild(script);
+            }
+        };
+
+        updateStructuredData();
+
         // Cleanup function to remove meta tags when component unmounts
         return () => {
             // Optional: Remove meta tags when component unmounts
@@ -89,7 +142,9 @@ const SEO: React.FC<SEOProps> = ({
         twitterCard,
         twitterTitle,
         twitterDescription,
-        twitterImage
+        twitterImage,
+        article,
+        structuredData
     ]);
 
     return null; // This component doesn't render anything

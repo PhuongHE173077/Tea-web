@@ -107,9 +107,9 @@ const districtSchema = new Schema({
 });
 
 // Indexes
-provinceSchema.index({ code: 1 }); // Index cho code field
+// Note: code field already has unique index, no need for additional index
 provinceSchema.index({ name: 'text', full_name: 'text' });
-districtSchema.index({ code: 1 }); // Index cho code field
+// Note: code field already has unique index, no need for additional index
 districtSchema.index({ name: 'text', full_name: 'text' });
 districtSchema.index({ province_code: 1, is_active: 1 });
 
@@ -221,7 +221,7 @@ const wardSchema = new Schema({
 });
 
 // Ward indexes
-wardSchema.index({ code: 1 }); // Index cho code field
+// Note: code field already has unique index, no need for additional index
 wardSchema.index({ district_code: 1, is_active: 1 });
 wardSchema.index({ name: 'text', full_name: 'text' });
 

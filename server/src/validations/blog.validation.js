@@ -7,7 +7,7 @@ const createBlog = async (req, res, next) => {
         const schema = Joi.object({
             blog_title: Joi.string().required().min(5).max(200).trim(),
             blog_content: Joi.string().required().min(50),
-            blog_excerpt: Joi.string().required().min(10).max(500),
+            blog_excerpt: Joi.string().optional().min(10).max(500), // Changed to optional
             blog_thumbnail: Joi.object({
                 url: Joi.string().uri().optional(),
                 alt: Joi.string().optional().default('')
@@ -16,8 +16,8 @@ const createBlog = async (req, res, next) => {
             blog_tags: Joi.array().items(Joi.string().trim()).optional(),
             blog_status: Joi.string().valid('draft', 'published', 'archived').default('draft'),
             blog_meta: Joi.object({
-                title: Joi.string().optional().max(60),
-                description: Joi.string().optional().max(160),
+                title: Joi.string().allow('', null).optional().max(60),
+                description: Joi.string().allow('', null).optional().max(160),
                 keywords: Joi.array().items(Joi.string()).optional()
             }).optional(),
             blog_featured: Joi.boolean().optional().default(false)
@@ -44,8 +44,8 @@ const updateBlog = async (req, res, next) => {
             blog_tags: Joi.array().items(Joi.string().trim()).optional(),
             blog_status: Joi.string().valid('draft', 'published', 'archived').optional(),
             blog_meta: Joi.object({
-                title: Joi.string().optional().max(60),
-                description: Joi.string().optional().max(160),
+                title: Joi.string().allow('', null).optional().max(60),
+                description: Joi.string().allow('', null).optional().max(160),
                 keywords: Joi.array().items(Joi.string()).optional()
             }).optional(),
             blog_featured: Joi.boolean().optional()

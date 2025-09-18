@@ -2,12 +2,90 @@ const { StatusCodes } = require("http-status-codes");
 import Blog from '~/models/blog.model';
 import ApiError from '~/utils/ApiError';
 import { slugify } from '~/utils/slugify';
+import MarkdownIt from 'markdown-it';
 
-// Tính toán thời gian đọc (khoảng 200 từ/phút)
-const calculateReadingTime = (content) => {
+// Initialize markdown parser
+const md = new MarkdownIt({
+    html: true,
+    linkify: true,
+    typographer: true
+});
+
+// Tính toán thời gian đọc (khoảng 200 từ/phút) từ markdown content
+const calculateReadingTime = (markdownContent) => {
     const wordsPerMinute = 200;
-    const wordCount = content.split(/\s+/).length;
+    // Convert markdown to plain text để đếm từ chính xác hơn
+    const plainText = md.render(markdownContent).replace(/<[^>]*>/g, '');
+    const wordCount = plainText.trim().split(/\s+/).filter(word => word.length > 0).length;
     return Math.ceil(wordCount / wordsPerMinute);
+};
+
+// Tạo excerpt từ markdown content
+const generateExcerptFromMarkdown = (markdownContent, maxLength = 200) => {
+    // Convert markdown to plain text
+    const plainText = md.render(markdownContent).replace(/<[^>]*>/g, '');
+    // Lấy đoạn đầu và cắt theo độ dài
+    const excerpt = plainText.trim().substring(0, maxLength);
+    return excerpt.length < plainText.length ? excerpt + '...' : excerpt;
+};
+
+// Tạo keywords từ content
+const generateKeywordsFromContent = (markdownContent, maxKeywords = 10) => {
+    const plainText = md.render(markdownContent).replace(/<[^>]*>/g, '');
+    const words = plainText.toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(word => word.length > 3); // Chỉ lấy từ có độ dài > 3
+
+    // Đếm tần suất xuất hiện
+    const wordCount = {};
+    words.forEach(word => {
+        wordCount[word] = (wordCount[word] || 0) + 1;
+    });
+
+    // Sắp xếp theo tần suất và lấy top keywords
+    return Object.entries(wordCount)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, maxKeywords)
+        .map(([word]) => word);
+};
+
+// Extract ảnh đầu tiên từ markdown content
+const extractFirstImageFromMarkdown = (markdownContent) => {
+    // Tìm markdown image syntax: ![alt](url)
+    const markdownImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
+    const markdownMatch = markdownContent.match(markdownImageRegex);
+
+    if (markdownMatch) {
+        return {
+            url: markdownMatch[2],
+            alt: markdownMatch[1] || 'Blog image'
+        };
+    }
+
+    // Tìm HTML img tag: <img src="url" alt="alt" />
+    const htmlImageRegex = /<img[^>]+src=["']([^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*\/?>/i;
+    const htmlMatch = markdownContent.match(htmlImageRegex);
+
+    if (htmlMatch) {
+        return {
+            url: htmlMatch[1],
+            alt: htmlMatch[2] || 'Blog image'
+        };
+    }
+
+    // Tìm HTML img tag đơn giản: <img src="url" />
+    const simpleHtmlImageRegex = /<img[^>]+src=["']([^"']+)["'][^>]*\/?>/i;
+    const simpleMatch = markdownContent.match(simpleHtmlImageRegex);
+
+    if (simpleMatch) {
+        return {
+            url: simpleMatch[1],
+            alt: 'Blog image'
+        };
+    }
+
+    return null;
 };
 
 // Tạo slug unique
@@ -123,9 +201,34 @@ const createBlog = async (data, authorId) => {
     try {
         // Generate unique slug
         const slug = await generateUniqueSlug(data.blog_title);
-        
-        // Calculate reading time
+
+        // Calculate reading time from markdown content
         const readingTime = calculateReadingTime(data.blog_content);
+
+        // Auto-generate excerpt from markdown content
+        data.blog_excerpt = generateExcerptFromMarkdown(data.blog_content);
+
+        // Auto-generate thumbnail from first image in markdown
+        if (!data.blog_thumbnail) {
+            const firstImage = extractFirstImageFromMarkdown(data.blog_content);
+            if (firstImage) {
+                data.blog_thumbnail = firstImage;
+            }
+        }
+
+        // Auto-generate SEO meta if not provided
+        if (!data.blog_meta) {
+            data.blog_meta = {};
+        }
+        if (!data.blog_meta.title) {
+            data.blog_meta.title = data.blog_title.substring(0, 60);
+        }
+        if (!data.blog_meta.description) {
+            data.blog_meta.description = data.blog_excerpt.substring(0, 160);
+        }
+        if (!data.blog_meta.keywords || data.blog_meta.keywords.length === 0) {
+            data.blog_meta.keywords = generateKeywordsFromContent(data.blog_content);
+        }
 
         const blogData = {
             ...data,
@@ -136,7 +239,7 @@ const createBlog = async (data, authorId) => {
         };
 
         const newBlog = await Blog.create(blogData);
-        
+
         return await Blog.findById(newBlog._id)
             .populate('blog_author', 'usr_name usr_avatar usr_email')
             .populate('blog_category', 'category_name category_slug')
@@ -152,7 +255,7 @@ const createBlog = async (data, authorId) => {
 const updateBlog = async (id, data) => {
     try {
         const existingBlog = await Blog.findById(id);
-        
+
         if (!existingBlog) {
             throw new ApiError(StatusCodes.NOT_FOUND, 'Blog not found');
         }
@@ -165,6 +268,37 @@ const updateBlog = async (id, data) => {
         // Recalculate reading time if content changed
         if (data.blog_content) {
             data.blog_reading_time = calculateReadingTime(data.blog_content);
+
+            // Auto-update excerpt from markdown content
+            data.blog_excerpt = generateExcerptFromMarkdown(data.blog_content);
+
+            // Auto-update thumbnail from first image in markdown if not provided
+            if (!data.blog_thumbnail) {
+                const firstImage = extractFirstImageFromMarkdown(data.blog_content);
+                if (firstImage) {
+                    data.blog_thumbnail = firstImage;
+                }
+            }
+
+            // Auto-update SEO meta
+            if (!data.blog_meta) {
+                data.blog_meta = existingBlog.blog_meta || {};
+            }
+            if (!data.blog_meta.keywords || data.blog_meta.keywords.length === 0) {
+                data.blog_meta.keywords = generateKeywordsFromContent(data.blog_content);
+            }
+        }
+
+        // Update meta title if title changed
+        if (data.blog_title && (!data.blog_meta || !data.blog_meta.title)) {
+            if (!data.blog_meta) data.blog_meta = existingBlog.blog_meta || {};
+            data.blog_meta.title = data.blog_title.substring(0, 60);
+        }
+
+        // Update meta description if excerpt changed
+        if (data.blog_excerpt && (!data.blog_meta || !data.blog_meta.description)) {
+            if (!data.blog_meta) data.blog_meta = existingBlog.blog_meta || {};
+            data.blog_meta.description = data.blog_excerpt.substring(0, 160);
         }
 
         // Set published date if status changed to published

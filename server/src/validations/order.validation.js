@@ -42,6 +42,7 @@ const createOrder = async (req, res, next) => {
                         'any.required': 'Address is required'
                     }),
                 note: Joi.string()
+                    .allow('', null)
                     .optional()
                     .max(1000)
                     .messages({

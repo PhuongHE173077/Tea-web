@@ -75,7 +75,7 @@ const discountSchema = new Schema({
 })
 
 // Index để tối ưu query
-discountSchema.index({ code: 1 });
+// Note: code field already has unique index, no need for additional index
 discountSchema.index({ is_active: 1, start_date: 1, end_date: 1 });
 discountSchema.index({ created_by: 1 });
 

@@ -289,7 +289,7 @@ export default function CheckoutPage() {
                 phone: formData.phone.trim(),
                 email: formData.email.trim().toLowerCase(),
                 address: fullAddress,
-                note: formData.note.trim()
+                note: formData.note.trim() || '' // Ensure empty string instead of undefined
             }
 
             // Convert cart items to order format
@@ -308,7 +308,7 @@ export default function CheckoutPage() {
             }))
 
             // Create order with structured shipping address
-            const response = await createOrderAPIs({
+            const orderData = {
                 customer_info: customerInfo,
                 cart_items: cartItemsForOrder,
                 discount_code: checkoutState.appliedDiscount?.code || undefined,
@@ -329,7 +329,12 @@ export default function CheckoutPage() {
                     full_address: fullAddress
                 },
                 payment_method: formData.payment_method
-            })
+            }
+
+            console.log('Order data being sent:', orderData)
+            console.log('Customer note value:', customerInfo.note)
+
+            const response = await createOrderAPIs(orderData)
 
             if (response.data.success) {
                 // Clear cart after successful order
@@ -372,299 +377,335 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/cart')}
-                    className="flex items-center gap-2"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Quay lại giỏ hàng
-                </Button>
-                <h1 className="text-2xl font-bold">Thanh toán</h1>
-            </div>
+        <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-6 sm:py-8">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/cart')}
+                        className="flex items-center gap-2 w-fit"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span className="hidden sm:inline">Quay lại giỏ hàng</span>
+                        <span className="sm:hidden">Quay lại</span>
+                    </Button>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Thanh toán</h1>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Customer Information Form */}
-                <div className="space-y-6">
+                <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                                 <Truck className="w-5 h-5" />
                                 Thông tin giao hàng
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <Label htmlFor="name">Họ và tên *</Label>
-                                    <Input
-                                        id="name"
-                                        value={formData.name}
-                                        onChange={(e) => handleInputChange('name', e.target.value)}
-                                        placeholder="Nhập họ và tên"
-                                        className={errors.name ? 'border-red-500' : ''}
-                                    />
-                                    {errors.name && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-                                    )}
+                        <CardContent className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Personal Information */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-900 border-b pb-2">👤 Thông tin cá nhân</h4>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="name" className="text-sm font-medium">Họ và tên *</Label>
+                                            <Input
+                                                id="name"
+                                                value={formData.name}
+                                                onChange={(e) => handleInputChange('name', e.target.value)}
+                                                placeholder="Nhập họ và tên"
+                                                className={`mt-1 ${errors.name ? 'border-red-500' : ''}`}
+                                            />
+                                            {errors.name && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="phone" className="text-sm font-medium">Số điện thoại *</Label>
+                                            <Input
+                                                id="phone"
+                                                value={formData.phone}
+                                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                                placeholder="Nhập số điện thoại"
+                                                className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
+                                            />
+                                            {errors.phone && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="email" className="text-sm font-medium">Email *</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => handleInputChange('email', e.target.value)}
+                                            placeholder="Nhập địa chỉ email"
+                                            className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
+                                        />
+                                        {errors.email && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <Label htmlFor="phone">Số điện thoại *</Label>
-                                    <Input
-                                        id="phone"
-                                        value={formData.phone}
-                                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                                        placeholder="Nhập số điện thoại"
-                                        className={errors.phone ? 'border-red-500' : ''}
-                                    />
-                                    {errors.phone && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
-                                    )}
-                                </div>
+                                {/* Address Information */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-900 border-b pb-2">📍 Địa chỉ giao hàng</h4>
 
-                                <div>
-                                    <Label htmlFor="email">Email *</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => handleInputChange('email', e.target.value)}
-                                        placeholder="Nhập địa chỉ email"
-                                        className={errors.email ? 'border-red-500' : ''}
-                                    />
-                                    {errors.email && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-                                    )}
-                                </div>
+                                    {/* Province Selection */}
+                                    <div>
+                                        <Label htmlFor="province" className="text-sm font-medium">Tỉnh/Thành phố *</Label>
+                                        <Select
+                                            value={formData.province}
+                                            onValueChange={handleProvinceChange}
+                                            disabled={isLoadingProvinces}
+                                        >
+                                            <SelectTrigger className={`mt-1 ${errors.province ? 'border-red-500' : ''}`}>
+                                                <SelectValue placeholder={
+                                                    isLoadingProvinces
+                                                        ? "Đang tải..."
+                                                        : "Chọn tỉnh/thành phố"
+                                                } />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {provinces.map((province) => (
+                                                    <SelectItem key={province.code} value={province.code}>
+                                                        {province.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.province && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.province}</p>
+                                        )}
+                                    </div>
 
-                                {/* Province Selection */}
-                                <div>
-                                    <Label htmlFor="province">Tỉnh/Thành phố *</Label>
-                                    <Select
-                                        value={formData.province}
-                                        onValueChange={handleProvinceChange}
-                                        disabled={isLoadingProvinces}
-                                    >
-                                        <SelectTrigger className={errors.province ? 'border-red-500' : ''}>
-                                            <SelectValue placeholder={
-                                                isLoadingProvinces
-                                                    ? "Đang tải..."
-                                                    : "Chọn tỉnh/thành phố"
-                                            } />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {provinces.map((province) => (
-                                                <SelectItem key={province.code} value={province.code}>
-                                                    {province.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.province && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.province}</p>
-                                    )}
-                                </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* District Selection */}
+                                        <div>
+                                            <Label htmlFor="district" className="text-sm font-medium">Quận/Huyện *</Label>
+                                            <Select
+                                                value={formData.district}
+                                                onValueChange={handleDistrictChange}
+                                                disabled={!formData.province || isLoadingDistricts}
+                                            >
+                                                <SelectTrigger className={`mt-1 ${errors.district ? 'border-red-500' : ''}`}>
+                                                    <SelectValue placeholder={
+                                                        !formData.province
+                                                            ? "Chọn tỉnh trước"
+                                                            : isLoadingDistricts
+                                                            ? "Đang tải..."
+                                                            : "Chọn quận/huyện"
+                                                    } />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {districts.map((district) => (
+                                                        <SelectItem key={district.code} value={district.code}>
+                                                            {district.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.district && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.district}</p>
+                                            )}
+                                        </div>
 
-                                {/* District Selection */}
-                                <div>
-                                    <Label htmlFor="district">Quận/Huyện *</Label>
-                                    <Select
-                                        value={formData.district}
-                                        onValueChange={handleDistrictChange}
-                                        disabled={!formData.province || isLoadingDistricts}
-                                    >
-                                        <SelectTrigger className={errors.district ? 'border-red-500' : ''}>
-                                            <SelectValue placeholder={
-                                                !formData.province
-                                                    ? "Vui lòng chọn tỉnh/thành phố trước"
-                                                    : isLoadingDistricts
-                                                    ? "Đang tải..."
-                                                    : "Chọn quận/huyện"
-                                            } />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {districts.map((district) => (
-                                                <SelectItem key={district.code} value={district.code}>
-                                                    {district.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.district && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.district}</p>
-                                    )}
-                                </div>
+                                        {/* Ward Selection */}
+                                        <div>
+                                            <Label htmlFor="ward" className="text-sm font-medium">Phường/Xã *</Label>
+                                            <Select
+                                                value={formData.ward}
+                                                onValueChange={handleWardChange}
+                                                disabled={!formData.district || isLoadingWards}
+                                            >
+                                                <SelectTrigger className={`mt-1 ${errors.ward ? 'border-red-500' : ''}`}>
+                                                    <SelectValue placeholder={
+                                                        !formData.district
+                                                            ? "Chọn quận trước"
+                                                            : isLoadingWards
+                                                            ? "Đang tải..."
+                                                            : "Chọn phường/xã"
+                                                    } />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {wards.map((ward) => (
+                                                        <SelectItem key={ward.code} value={ward.code}>
+                                                            {ward.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.ward && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.ward}</p>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                {/* Ward Selection */}
-                                <div>
-                                    <Label htmlFor="ward">Phường/Xã *</Label>
-                                    <Select
-                                        value={formData.ward}
-                                        onValueChange={handleWardChange}
-                                        disabled={!formData.district || isLoadingWards}
-                                    >
-                                        <SelectTrigger className={errors.ward ? 'border-red-500' : ''}>
-                                            <SelectValue placeholder={
-                                                !formData.district
-                                                    ? "Vui lòng chọn quận/huyện trước"
-                                                    : isLoadingWards
-                                                    ? "Đang tải..."
-                                                    : "Chọn phường/xã"
-                                            } />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {wards.map((ward) => (
-                                                <SelectItem key={ward.code} value={ward.code}>
-                                                    {ward.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.ward && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.ward}</p>
-                                    )}
-                                </div>
+                                    {/* Street Address */}
+                                    <div>
+                                        <Label htmlFor="street" className="text-sm font-medium">Địa chỉ cụ thể *</Label>
+                                        <Textarea
+                                            id="street"
+                                            value={formData.street}
+                                            onChange={(e) => handleInputChange('street', e.target.value)}
+                                            placeholder="Nhập số nhà, tên đường (ví dụ: 123 Nguyễn Trãi)"
+                                            rows={2}
+                                            className={`mt-1 ${errors.street ? 'border-red-500' : ''}`}
+                                        />
+                                        {errors.street && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.street}</p>
+                                        )}
+                                    </div>
 
-                                {/* Street Address */}
-                                <div>
-                                    <Label htmlFor="street">Địa chỉ cụ thể *</Label>
-                                    <Textarea
-                                        id="street"
-                                        value={formData.street}
-                                        onChange={(e) => handleInputChange('street', e.target.value)}
-                                        placeholder="Nhập số nhà, tên đường, phường/xã (ví dụ: 123 Nguyễn Trãi, Phường Thanh Xuân Nam)"
-                                        rows={2}
-                                        className={errors.street ? 'border-red-500' : ''}
-                                    />
-                                    {errors.street && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.street}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="note">Ghi chú (tùy chọn)</Label>
-                                    <Textarea
-                                        id="note"
-                                        value={formData.note}
-                                        onChange={(e) => handleInputChange('note', e.target.value)}
-                                        placeholder="Ghi chú thêm cho đơn hàng (thời gian giao hàng, yêu cầu đặc biệt...)"
-                                        rows={2}
-                                    />
+                                    <div>
+                                        <Label htmlFor="note" className="text-sm font-medium text-gray-700">
+                                            📝 Ghi chú
+                                            <span className="text-gray-500 font-normal ml-1">(không bắt buộc)</span>
+                                        </Label>
+                                        <Textarea
+                                            id="note"
+                                            value={formData.note}
+                                            onChange={(e) => handleInputChange('note', e.target.value)}
+                                            placeholder="💡 Bạn có thể để trống phần này hoặc ghi chú thêm về đơn hàng (thời gian giao hàng, yêu cầu đặc biệt...)"
+                                            rows={3}
+                                            className="mt-1 resize-none"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            ✨ Phần này hoàn toàn tùy chọn - bạn có thể bỏ qua nếu không cần thiết
+                                        </p>
+                                    </div>
                                 </div>
                             </form>
-                        </CardContent>
-                    </Card>
-
-                    {/* Payment Method */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <CreditCard className="w-5 h-5" />
-                                Phương thức thanh toán
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <RadioGroup
-                                value={formData.payment_method}
-                                onValueChange={(value) => handleInputChange('payment_method', value)}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="cod" id="cod" />
-                                    <Label htmlFor="cod">Thanh toán khi nhận hàng (COD)</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                                    <Label htmlFor="bank_transfer">Chuyển khoản ngân hàng</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="momo" id="momo" />
-                                    <Label htmlFor="momo">Ví MoMo</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="vnpay" id="vnpay" />
-                                    <Label htmlFor="vnpay">VNPay</Label>
-                                </div>
-                            </RadioGroup>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Order Summary */}
-                <div className="space-y-6">
-                    <Card>
+                <div className="lg:col-span-1 space-y-6">
+                    <Card className="sticky top-6">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                                 <ShoppingBag className="w-5 h-5" />
                                 Đơn hàng của bạn
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             {/* Cart Items */}
-                            <div className="space-y-3">
-                                {cartItems.map((item) => (
-                                    <div key={`${item.id}-${item.attribute?.name || 'default'}`} className="flex items-center gap-3">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-16 h-16 object-cover rounded"
-                                        />
-                                        <div className="flex-1">
-                                            <h4 className="font-medium">{item.name}</h4>
-                                            {item.attribute && (
-                                                <p className="text-sm text-gray-600">
-                                                    {item.attribute.name} - {item.attribute.unit}
-                                                </p>
-                                            )}
-                                            <p className="text-sm text-gray-600">
-                                                Số lượng: {item.quantity}
-                                            </p>
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-900 border-b pb-2">Sản phẩm đã chọn</h4>
+                                <div className="space-y-3 max-h-60 overflow-y-auto">
+                                    {cartItems.map((item) => (
+                                        <div key={`${item.id}-${item.attribute?.name || 'default'}`} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                                            <img
+                                                src={item.image}
+                                                alt={item.name}
+                                                className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md flex-shrink-0"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-medium text-sm sm:text-base text-gray-900 line-clamp-2">{item.name}</h4>
+                                                {item.attribute && (
+                                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                                        {item.attribute.name} - {item.attribute.unit}
+                                                    </p>
+                                                )}
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <span className="text-xs sm:text-sm text-gray-600">
+                                                        SL: {item.quantity}
+                                                    </span>
+                                                    <span className="font-medium text-sm sm:text-base text-orange-600">
+                                                        {formatPrice((item.attribute ? item.attribute.price : item.price) * item.quantity)}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-medium">
-                                                {formatPrice((item.attribute ? item.attribute.price : item.price) * item.quantity)}
-                                            </p>
-                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Payment Method */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                                    <CreditCard className="w-4 h-4" />
+                                    Phương thức thanh toán
+                                </h4>
+                                <RadioGroup
+                                    value={formData.payment_method}
+                                    onValueChange={(value) => handleInputChange('payment_method', value)}
+                                    className="space-y-3"
+                                >
+                                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                        <RadioGroupItem value="cod" id="cod" />
+                                        <Label htmlFor="cod" className="flex-1 cursor-pointer text-sm sm:text-base">
+                                            💵 Thanh toán khi nhận hàng (COD)
+                                        </Label>
                                     </div>
-                                ))}
+                                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                        <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                                        <Label htmlFor="bank_transfer" className="flex-1 cursor-pointer text-sm sm:text-base">
+                                            🏦 Chuyển khoản ngân hàng
+                                        </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                        <RadioGroupItem value="momo" id="momo" />
+                                        <Label htmlFor="momo" className="flex-1 cursor-pointer text-sm sm:text-base">
+                                            📱 Ví MoMo
+                                        </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                        <RadioGroupItem value="vnpay" id="vnpay" />
+                                        <Label htmlFor="vnpay" className="flex-1 cursor-pointer text-sm sm:text-base">
+                                            💳 VNPay
+                                        </Label>
+                                    </div>
+                                </RadioGroup>
                             </div>
 
                             <Separator />
 
                             {/* Order Summary */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span>Tạm tính</span>
-                                    <span>{formatPrice(checkoutState.cartTotal)}</span>
-                                </div>
-
-                                {checkoutState.appliedDiscount && (
-                                    <div className="flex justify-between text-green-600">
-                                        <span>Giảm giá ({checkoutState.appliedDiscount.code})</span>
-                                        <span>-{formatPrice(checkoutState.appliedDiscount.discount_amount)}</span>
+                            <div className="space-y-3">
+                                <h4 className="font-medium text-gray-900">Tổng kết đơn hàng</h4>
+                                <div className="space-y-2 text-sm sm:text-base">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Tạm tính</span>
+                                        <span className="font-medium">{formatPrice(checkoutState.cartTotal)}</span>
                                     </div>
-                                )}
 
-                                <div className="flex justify-between">
-                                    <span>Phí vận chuyển</span>
-                                    <span>{formatPrice(checkoutState.shippingFee)}</span>
-                                </div>
+                                    {checkoutState.appliedDiscount && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>Giảm giá ({checkoutState.appliedDiscount.code})</span>
+                                            <span className="font-medium">-{formatPrice(checkoutState.appliedDiscount.discount_amount)}</span>
+                                        </div>
+                                    )}
 
-                                <Separator />
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Phí vận chuyển</span>
+                                        <span className="font-medium">{formatPrice(checkoutState.shippingFee)}</span>
+                                    </div>
 
-                                <div className="flex justify-between text-lg font-bold">
-                                    <span>Tổng cộng</span>
-                                    <span className="text-red-500">{formatPrice(checkoutState.finalTotal)}</span>
+                                    <Separator />
+
+                                    <div className="flex justify-between text-lg font-bold">
+                                        <span>Tổng cộng</span>
+                                        <span className="text-orange-600">{formatPrice(checkoutState.finalTotal)}</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <Button
                                 onClick={handleSubmit}
-                                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-medium"
+                                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 sm:py-4 text-base sm:text-lg font-medium rounded-lg transition-colors"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -673,13 +714,17 @@ export default function CheckoutPage() {
                                         Đang xử lý...
                                     </>
                                 ) : (
-                                    'Đặt hàng'
+                                    <>
+                                        <ShoppingBag className="w-4 h-4 mr-2" />
+                                        Đặt hàng ngay
+                                    </>
                                 )}
                             </Button>
                         </CardContent>
                     </Card>
                 </div>
             </div>
+        </div>
         </div>
     )
 }

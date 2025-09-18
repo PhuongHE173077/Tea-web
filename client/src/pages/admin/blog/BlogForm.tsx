@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, Upload, X } from 'lucide-react';
+import { ArrowLeft, Save, Eye, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -13,16 +14,16 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createBlog, updateBlog, getBlogById } from '@/apis/blog.apis';
 import { getAllCategories } from '@/apis/category.apis';
-import { uploadSingleImage } from '@/apis/index';
 import { toast } from 'react-toastify';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import BlogMarkdownEditor from '@/components/blog/BlogMarkdownEditor';
+import MDEditor from '@uiw/react-md-editor';
 
 const blogSchema = z.object({
     blog_title: z.string().min(5, 'Tiêu đề phải có ít nhất 5 ký tự').max(200, 'Tiêu đề không được quá 200 ký tự'),
     blog_content: z.string().min(50, 'Nội dung phải có ít nhất 50 ký tự'),
-    blog_excerpt: z.string().min(10, 'Tóm tắt phải có ít nhất 10 ký tự').max(500, 'Tóm tắt không được quá 500 ký tự'),
     blog_category: z.string().optional(),
     blog_status: z.enum(['draft', 'published', 'archived']),
     blog_featured: z.boolean(),
@@ -44,8 +45,6 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
     const { id } = useParams<{ id: string }>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [thumbnail, setThumbnail] = useState<{ url: string; alt: string } | null>(null);
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [previewMode, setPreviewMode] = useState(false);
@@ -123,16 +122,12 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
             reset({
                 blog_title: blog.blog_title,
                 blog_content: blog.blog_content,
-                blog_excerpt: blog.blog_excerpt,
                 blog_category: blog.blog_category?._id || 'none',
                 blog_status: blog.blog_status,
                 blog_featured: blog.blog_featured,
                 blog_meta: blog.blog_meta || { title: '', description: '', keywords: [] }
             });
 
-            if (blog.blog_thumbnail) {
-                setThumbnail(blog.blog_thumbnail);
-            }
             setTags(blog.blog_tags || []);
         } catch (error) {
             console.error('Error fetching blog:', error);
@@ -143,37 +138,7 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
         }
     };
 
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            toast.error('Vui lòng chọn file hình ảnh');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Kích thước file không được vượt quá 5MB');
-            return;
-        }
-
-        setUploading(true);
-        try {
-            const imageUrl = await uploadSingleImage(file);
-            setThumbnail({
-                url: imageUrl,
-                alt: watchedValues.blog_title || 'Blog thumbnail'
-            });
-            toast.success('Tải ảnh lên thành công');
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            toast.error('Có lỗi xảy ra khi tải ảnh lên');
-        } finally {
-            setUploading(false);
-        }
-    };
 
     const handleAddTag = () => {
         if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -189,11 +154,10 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
     const onSubmit = async (data: BlogFormData) => {
         setLoading(true);
         try {
-            const blogData: BlogFormData & { blog_tags: string[]; blog_thumbnail?: { url: string; alt: string } } = {
+            const blogData: BlogFormData & { blog_tags: string[] } = {
                 ...data,
                 blog_category: data.blog_category === 'none' ? undefined : data.blog_category,
-                blog_tags: tags,
-                blog_thumbnail: thumbnail || undefined
+                blog_tags: tags
             };
 
             if (mode === 'create') {
@@ -269,25 +233,20 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                     /* Preview Mode */
                     <Card>
                         <CardContent className="p-8">
-                            {thumbnail && (
-                                <div className="aspect-video overflow-hidden rounded-lg mb-6">
-                                    <img
-                                        src={thumbnail.url}
-                                        alt={thumbnail.alt}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            )}
                             <h1 className="text-3xl font-bold text-gray-900 mb-4">
                                 {watchedValues.blog_title || 'Tiêu đề blog'}
                             </h1>
-                            <p className="text-lg text-gray-600 mb-6">
-                                {watchedValues.blog_excerpt || 'Tóm tắt blog'}
-                            </p>
                             <div className="prose max-w-none">
-                                <div dangerouslySetInnerHTML={{ 
-                                    __html: watchedValues.blog_content?.replace(/\n/g, '<br>') || 'Nội dung blog' 
-                                }} />
+                                <div data-color-mode="light">
+                                    <MDEditor.Markdown
+                                        source={watchedValues.blog_content || 'Nội dung blog'}
+                                        style={{
+                                            whiteSpace: 'pre-wrap',
+                                            padding: '16px',
+                                            backgroundColor: 'transparent'
+                                        }}
+                                    />
+                                </div>
                             </div>
                             {tags.length > 0 && (
                                 <div className="mt-8 pt-6 border-t">
@@ -336,88 +295,24 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                                             )}
                                         </div>
 
-                                        {/* Excerpt */}
-                                        <div>
-                                            <Label htmlFor="blog_excerpt">Tóm tắt *</Label>
-                                            <Textarea
-                                                id="blog_excerpt"
-                                                {...register('blog_excerpt')}
-                                                placeholder="Nhập tóm tắt ngắn gọn về blog..."
-                                                rows={3}
-                                                className={errors.blog_excerpt ? 'border-red-500' : ''}
-                                            />
-                                            {errors.blog_excerpt && (
-                                                <p className="text-red-500 text-sm mt-1">
-                                                    {errors.blog_excerpt.message}
-                                                </p>
-                                            )}
-                                        </div>
+
 
                                         {/* Content */}
                                         <div>
-                                            <Label htmlFor="blog_content">Nội dung *</Label>
-                                            <Textarea
-                                                id="blog_content"
-                                                {...register('blog_content')}
-                                                placeholder="Nhập nội dung blog... (Hỗ trợ HTML)"
-                                                rows={15}
-                                                className={errors.blog_content ? 'border-red-500' : ''}
+                                            <BlogMarkdownEditor
+                                                value={watchedValues.blog_content || ''}
+                                                onChange={(value) => setValue('blog_content', value)}
+                                                placeholder="Nhập nội dung blog bằng Markdown..."
+                                                height={400}
+                                                label="Nội dung"
+                                                error={errors.blog_content?.message}
+                                                disabled={loading}
                                             />
-                                            {errors.blog_content && (
-                                                <p className="text-red-500 text-sm mt-1">
-                                                    {errors.blog_content.message}
-                                                </p>
-                                            )}
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                Bạn có thể sử dụng HTML tags để định dạng nội dung
-                                            </p>
                                         </div>
                                     </CardContent>
                                 </Card>
 
-                                {/* Thumbnail */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Hình ảnh đại diện</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            {thumbnail ? (
-                                                <div className="relative">
-                                                    <img
-                                                        src={thumbnail.url}
-                                                        alt={thumbnail.alt}
-                                                        className="w-full h-48 object-cover rounded-lg"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="absolute top-2 right-2"
-                                                        onClick={() => setThumbnail(null)}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                                    <p className="text-gray-600 mb-2">Chọn hình ảnh đại diện</p>
-                                                    <p className="text-sm text-gray-500">PNG, JPG, GIF tối đa 5MB</p>
-                                                </div>
-                                            )}
-                                            <Input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleImageUpload}
-                                                disabled={uploading}
-                                            />
-                                            {uploading && (
-                                                <p className="text-sm text-blue-600">Đang tải ảnh lên...</p>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
+
                             </TabsContent>
 
                             <TabsContent value="settings" className="space-y-6">
@@ -526,32 +421,51 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                                     <CardContent className="space-y-4">
                                         {/* Meta Title */}
                                         <div>
-                                            <Label htmlFor="meta_title">Meta Title</Label>
+                                            <Label htmlFor="meta_title" className="text-sm font-medium text-gray-700">
+                                                🏷️ Meta Title
+                                                <span className="text-gray-500 font-normal ml-1">(không bắt buộc)</span>
+                                            </Label>
                                             <Input
                                                 id="meta_title"
                                                 {...register('blog_meta.title')}
-                                                placeholder="Tiêu đề SEO (tối đa 60 ký tự)"
+                                                placeholder="💡 Bạn có thể để trống - hệ thống sẽ sử dụng tiêu đề blog (tối đa 60 ký tự)"
                                                 maxLength={60}
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                {watchedValues.blog_meta?.title?.length || 0}/60 ký tự
-                                            </p>
+                                            <div className="flex justify-between items-center mt-1">
+                                                <p className="text-xs text-gray-500">
+                                                    ✨ Để trống để hệ thống tự động sử dụng tiêu đề blog
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    {watchedValues.blog_meta?.title?.length || 0}/60 ký tự
+                                                </p>
+                                            </div>
                                         </div>
 
                                         {/* Meta Description */}
                                         <div>
-                                            <Label htmlFor="meta_description">Meta Description</Label>
+                                            <Label htmlFor="meta_description" className="text-sm font-medium text-gray-700">
+                                                📝 Meta Description
+                                                <span className="text-gray-500 font-normal ml-1">(không bắt buộc)</span>
+                                            </Label>
                                             <Textarea
                                                 id="meta_description"
                                                 {...register('blog_meta.description')}
-                                                placeholder="Mô tả SEO (tối đa 160 ký tự)"
+                                                placeholder="💡 Bạn có thể để trống - hệ thống sẽ tự động tạo từ nội dung blog (tối đa 160 ký tự)"
                                                 rows={3}
                                                 maxLength={160}
+                                                className="resize-none"
                                             />
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                {watchedValues.blog_meta?.description?.length || 0}/160 ký tự
-                                            </p>
+                                            <div className="flex justify-between items-center mt-1">
+                                                <p className="text-xs text-gray-500">
+                                                    ✨ Để trống để hệ thống tự động tạo meta description từ nội dung blog
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    {watchedValues.blog_meta?.description?.length || 0}/160 ký tự
+                                                </p>
+                                            </div>
                                         </div>
+
+                                        
                                     </CardContent>
                                 </Card>
                             </TabsContent>
