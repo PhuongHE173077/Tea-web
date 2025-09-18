@@ -1,486 +1,31 @@
 import { StatusCodes } from "http-status-codes"
-import { addressService } from "~/services/address.service"
+import axios from "axios"
 
-// Mock Data cho testing
-// Mock Data cho testing
+// Sử dụng API bên thứ 3 cho dữ liệu địa chỉ Việt Nam
+const PROVINCES_API_URL = "https://provinces.open-api.vn/api"
 
-const MOCK_PROVINCES = [
-    {
-        _id: "p1",
-        code: "01",
-        name: "Hà Nội",
-        full_name: "Thành phố Hà Nội",
-        code_name: "ha_noi",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p2",
-        code: "79",
-        name: "TP. Hồ Chí Minh",
-        full_name: "Thành phố Hồ Chí Minh",
-        code_name: "tp_ho_chi_minh",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p3",
-        code: "48",
-        name: "Đà Nẵng",
-        full_name: "Thành phố Đà Nẵng",
-        code_name: "da_nang",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p4",
-        code: "31",
-        name: "Hải Phòng",
-        full_name: "Thành phố Hải Phòng",
-        code_name: "hai_phong",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p5",
-        code: "92",
-        name: "Cần Thơ",
-        full_name: "Thành phố Cần Thơ",
-        code_name: "can_tho",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p6",
-        code: "82",
-        name: "Buôn Ma Thuột",
-        full_name: "Thành phố Buôn Ma Thuột",
-        code_name: "buon_ma_thuot",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p7",
-        code: "45",
-        name: "Vinh",
-        full_name: "Thành phố Vinh",
-        code_name: "vinh",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p8",
-        code: "68",
-        name: "Thái Nguyên",
-        full_name: "Thành phố Thái Nguyên",
-        code_name: "thai_nguyen",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p9",
-        code: "58",
-        name: "Nha Trang",
-        full_name: "Thành phố Nha Trang",
-        code_name: "nha_trang",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        _id: "p10",
-        code: "52",
-        name: "Pleiku",
-        full_name: "Thành phố Pleiku",
-        code_name: "pleiku",
-        administrative_unit_id: 1,
-        is_active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+// Helper function để map administrative unit type
+const getAdministrativeUnitId = (type) => {
+    switch (type) {
+        case 'thanh-pho':
+        case 'thanh-pho-trung-uong':
+            return 1 // Thành phố
+        case 'quan':
+            return 2 // Quận
+        case 'huyen':
+            return 3 // Huyện
+        case 'thi-xa':
+            return 4 // Thị xã
+        case 'phuong':
+            return 5 // Phường
+        case 'xa':
+            return 6 // Xã
+        case 'thi-tran':
+            return 7 // Thị trấn
+        default:
+            return 3 // Default to huyện
     }
-]
-
-const MOCK_DISTRICTS = {
-    "01": [ // Hà Nội - đầy đủ hơn các quận / huyện chính
-        {
-            _id: "d1",
-            code: "001",
-            name: "Ba Đình",
-            full_name: "Quận Ba Đình",
-            code_name: "ba_dinh",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d2",
-            code: "002",
-            name: "Hoàn Kiếm",
-            full_name: "Quận Hoàn Kiếm",
-            code_name: "hoan_kiem",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d3",
-            code: "003",
-            name: "Tây Hồ",
-            full_name: "Quận Tây Hồ",
-            code_name: "tay_ho",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d4",
-            code: "004",
-            name: "Long Biên",
-            full_name: "Quận Long Biên",
-            code_name: "long_bien",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d5",
-            code: "005",
-            name: "Cầu Giấy",
-            full_name: "Quận Cầu Giấy",
-            code_name: "cau_giay",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d6",
-            code: "006",
-            name: "Nam Từ Liêm",
-            full_name: "Quận Nam Từ Liêm",
-            code_name: "nam_tu_liem",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d7",
-            code: "007",
-            name: "Bắc Từ Liêm",
-            full_name: "Quận Bắc Từ Liêm",
-            code_name: "bac_tu_liem",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d8",
-            code: "008",
-            name: "Thanh Xuân",
-            full_name: "Quận Thanh Xuân",
-            code_name: "thanh_xuan",
-            province_code: "01",
-            administrative_unit_id_num: 2,
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d9",
-            code: "009",
-            name: "Hoàng Mai",
-            full_name: "Quận Hoàng Mai",
-            code_name: "hoang_mai",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d10",
-            code: "010",
-            name: "Đống Đa",
-            full_name: "Quận Đống Đa",
-            code_name: "dong_da",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d11",
-            code: "011",
-            name: "Hai Bà Trưng",
-            full_name: "Quận Hai Bà Trưng",
-            code_name: "hai_ba_trung",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d12",
-            code: "012",
-            name: "Thanh Trì",
-            full_name: "Huyện Thanh Trì",
-            code_name: "thanh_tri",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d13",
-            code: "013",
-            name: "Sóc Sơn",
-            full_name: "Huyện Sóc Sơn",
-            code_name: "soc_son",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d14",
-            code: "014",
-            name: "Đông Anh",
-            full_name: "Huyện Đông Anh",
-            code_name: "dong_anh",
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d15",
-            code: "015",
-            name: "Hoàn Mai", // giả lập nếu có
-            full_name: "Huyện Hoàn Mai",
-            code_name: "hoan_mai_huyen", 
-            province_code: "01",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-        // ... có thể thêm Huyện khác như Hoài Đức, Quốc Oai, Phúc Thọ, Mỹ Đức, Ba Vì, Chương Mỹ, Thanh Oai,...
-    ],
-    "79": [ // TP.HCM
-        {
-            _id: "d20",
-            code: "760",
-            name: "Quận 1",
-            full_name: "Quận 1",
-            code_name: "quan_1",
-            province_code: "79",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "d21",
-            code: "761",
-            name: "Quận 2",
-            full_name: "Quận 2",
-            code_name: "quan_2",
-            province_code: "79",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-        // ... thêm các quận khác của TP.HCM
-    ],
-    "48": [ // Đà Nẵng
-        {
-            _id: "d30",
-            code: "490",
-            name: "Quận Hải Châu",
-            full_name: "Quận Hải Châu",
-            code_name: "hai_chau",
-            province_code: "48",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ],
-    "31": [ // Hải Phòng
-        {
-            _id: "d40",
-            code: "310",
-            name: "Quận Hồng Bàng",
-            full_name: "Quận Hồng Bàng",
-            code_name: "hong_bang",
-            province_code: "31",
-            administrative_unit_id: 2,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ]
-    // ... có thể thêm districts cho các thành phố khác
 }
-
-const MOCK_WARDS = {
-    // Hà Nội quận Ba Đình (một số wards mẫu)
-    "001": [ 
-        {
-            _id: "w1",
-            code: "00001",
-            name: "Phường Phúc Xá",
-            full_name: "Phường Phúc Xá",
-            code_name: "phuc_xa",
-            district_code: "001",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w2",
-            code: "00002",
-            name: "Phường Trúc Bạch",
-            full_name: "Phường Trúc Bạch",
-            code_name: "truc_bach",
-            district_code: "001",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w3",
-            code: "00003",
-            name: "Phường Vĩnh Phúc",
-            full_name: "Phường Vĩnh Phúc",
-            code_name: "vinh_phuc",
-            district_code: "001",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w4",
-            code: "00004",
-            name: "Phường Liễu Giai",
-            full_name: "Phường Liễu Giai",
-            code_name: "lieu_giai",
-            district_code: "001",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ],
-    // Hà Nội quận Hoàng Mai
-    "009": [
-        {
-            _id: "w10",
-            code: "00090",
-            name: "Phường Hoàng Liệt",
-            full_name: "Phường Hoàng Liệt",
-            code_name: "hoang_liet",
-            district_code: "009",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w11",
-            code: "00091",
-            name: "Phường Đại Kim",
-            full_name: "Phường Đại Kim",
-            code_name: "dai_kim",
-            district_code: "009",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ],
-    // Hà Nội huyện Đông Anh
-    "014": [
-        {
-            _id: "w20",
-            code: "00140",
-            name: "Thị trấn Đông Anh",
-            full_name: "Thị trấn Đông Anh",
-            code_name: "thi_tran_dong_anh",
-            district_code: "014",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w21",
-            code: "00141",
-            name: "Xã Cổ Loa",
-            full_name: "Xã Cổ Loa",
-            code_name: "co_loa",
-            district_code: "014",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            _id: "w22",
-            code: "00142",
-            name: "Xã Võng La",
-            full_name: "Xã Võng La",
-            code_name: "vong_la",
-            district_code: "014",
-            administrative_unit_id: 3,
-            is_active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ]
-    // ... thêm wards/xã cho các quận/huyện khác
-}
-
 
 const getAllProvinces = async (req, res, next) => {
     try {
@@ -488,8 +33,22 @@ const getAllProvinces = async (req, res, next) => {
         const { search, is_active } = req.query
         console.log('Query params:', { search, is_active })
 
-        // Sử dụng mock data thay vì database
-        let provinces = [...MOCK_PROVINCES]
+        // Gọi API bên thứ 3
+        const response = await axios.get(`${PROVINCES_API_URL}/p/`)
+        let provinces = response.data
+
+        // Transform data để match với format cũ
+        provinces = provinces.map(province => ({
+            _id: `p${province.code}`,
+            code: province.code.toString().padStart(2, '0'),
+            name: province.name,
+            full_name: province.name_with_type,
+            code_name: province.slug,
+            administrative_unit_id: province.type === 'thanh-pho-trung-uong' ? 1 : 2,
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }))
 
         // Apply search filter nếu có
         if (search) {
@@ -505,7 +64,7 @@ const getAllProvinces = async (req, res, next) => {
             provinces = provinces.filter(p => p.is_active === activeFilter)
         }
 
-        console.log(`Found ${provinces.length} provinces (using mock data)`)
+        console.log(`Found ${provinces.length} provinces (using API data)`)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -517,19 +76,32 @@ const getAllProvinces = async (req, res, next) => {
         next(error)
     }
 }
-
 const getProvinceByCode = async (req, res, next) => {
     try {
         const { code } = req.params
 
-        // Sử dụng mock data thay vì database
-        const province = MOCK_PROVINCES.find(p => p.code === code)
+        // Gọi API bên thứ 3 để lấy province theo code
+        const response = await axios.get(`${PROVINCES_API_URL}/p/${code}`)
+        const provinceData = response.data
 
-        if (!province) {
+        if (!provinceData) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
                 message: 'Province not found'
             })
+        }
+
+        // Transform data để match với format cũ
+        const province = {
+            _id: `p${provinceData.code}`,
+            code: provinceData.code.toString().padStart(2, '0'),
+            name: provinceData.name,
+            full_name: provinceData.name_with_type,
+            code_name: provinceData.slug,
+            administrative_unit_id: provinceData.type === 'thanh-pho-trung-uong' ? 1 : 2,
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         }
 
         res.status(StatusCodes.OK).json({
@@ -538,6 +110,12 @@ const getProvinceByCode = async (req, res, next) => {
             data: province
         })
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Province not found'
+            })
+        }
         next(error)
     }
 }
@@ -546,9 +124,32 @@ const getDistrictsByProvinceCode = async (req, res, next) => {
     try {
         const { province_code } = req.params
         const { search } = req.query
-        
-        // Sử dụng mock data thay vì database
-        let districts = MOCK_DISTRICTS[province_code] || []
+
+        // Gọi API bên thứ 3 để lấy districts theo province code
+        const response = await axios.get(`${PROVINCES_API_URL}/p/${province_code}?depth=2`)
+        const provinceData = response.data
+
+        if (!provinceData || !provinceData.districts) {
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: 'Districts retrieved successfully',
+                data: []
+            })
+        }
+
+        // Transform data để match với format cũ
+        let districts = provinceData.districts.map(district => ({
+            _id: `d${district.code}`,
+            code: district.code.toString().padStart(3, '0'),
+            name: district.name,
+            full_name: district.name_with_type,
+            code_name: district.slug,
+            province_code: province_code,
+            administrative_unit_id: getAdministrativeUnitId(district.type),
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }))
 
         // Apply search filter nếu có
         if (search) {
@@ -558,14 +159,15 @@ const getDistrictsByProvinceCode = async (req, res, next) => {
             )
         }
 
-        console.log(`Found ${districts.length} districts for province ${province_code} (using mock data)`)
-        
+        console.log(`Found ${districts.length} districts for province ${province_code} (using API data)`)
+
         res.status(StatusCodes.OK).json({
             success: true,
             message: 'Districts retrieved successfully',
             data: districts
         })
     } catch (error) {
+        console.error('❌ Error in getDistrictsByProvinceCode:', error)
         next(error)
     }
 }
@@ -574,18 +176,29 @@ const getDistrictByCode = async (req, res, next) => {
     try {
         const { code } = req.params
 
-        // Tìm district trong tất cả provinces
-        let district = null
-        for (const provinceCode in MOCK_DISTRICTS) {
-            district = MOCK_DISTRICTS[provinceCode].find(d => d.code === code)
-            if (district) break
-        }
+        // Gọi API bên thứ 3 để lấy district theo code
+        const response = await axios.get(`${PROVINCES_API_URL}/d/${code}`)
+        const districtData = response.data
 
-        if (!district) {
+        if (!districtData) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
                 message: 'District not found'
             })
+        }
+
+        // Transform data để match với format cũ
+        const district = {
+            _id: `d${districtData.code}`,
+            code: districtData.code.toString().padStart(3, '0'),
+            name: districtData.name,
+            full_name: districtData.name_with_type,
+            code_name: districtData.slug,
+            province_code: districtData.province_code,
+            administrative_unit_id: getAdministrativeUnitId(districtData.type),
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         }
 
         res.status(StatusCodes.OK).json({
@@ -594,6 +207,12 @@ const getDistrictByCode = async (req, res, next) => {
             data: district
         })
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'District not found'
+            })
+        }
         next(error)
     }
 }
@@ -606,8 +225,31 @@ const getWardsByDistrictCode = async (req, res, next) => {
         const { search } = req.query
         console.log('Query params:', { search })
 
-        // Sử dụng mock data thay vì database
-        let wards = MOCK_WARDS[district_code] || []
+        // Gọi API bên thứ 3 để lấy wards theo district code
+        const response = await axios.get(`${PROVINCES_API_URL}/d/${district_code}?depth=2`)
+        const districtData = response.data
+
+        if (!districtData || !districtData.wards) {
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: 'Wards retrieved successfully',
+                data: []
+            })
+        }
+
+        // Transform data để match với format cũ
+        let wards = districtData.wards.map(ward => ({
+            _id: `w${ward.code}`,
+            code: ward.code.toString().padStart(5, '0'),
+            name: ward.name,
+            full_name: ward.name_with_type,
+            code_name: ward.slug,
+            district_code: district_code,
+            administrative_unit_id: getAdministrativeUnitId(ward.type),
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }))
 
         // Apply search filter nếu có
         if (search) {
@@ -617,7 +259,7 @@ const getWardsByDistrictCode = async (req, res, next) => {
             )
         }
 
-        console.log(`Found ${wards.length} wards for district ${district_code} (using mock data)`)
+        console.log(`Found ${wards.length} wards for district ${district_code} (using API data)`)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -635,18 +277,29 @@ const getWardByCode = async (req, res, next) => {
         console.log(`📍 GET /api/v1/address/wards/${req.params.code} called`)
         const { code } = req.params
 
-        // Tìm ward trong tất cả districts
-        let ward = null
-        for (const districtCode in MOCK_WARDS) {
-            ward = MOCK_WARDS[districtCode].find(w => w.code === code)
-            if (ward) break
-        }
+        // Gọi API bên thứ 3 để lấy ward theo code
+        const response = await axios.get(`${PROVINCES_API_URL}/w/${code}`)
+        const wardData = response.data
 
-        if (!ward) {
+        if (!wardData) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
                 message: 'Ward not found'
             })
+        }
+
+        // Transform data để match với format cũ
+        const ward = {
+            _id: `w${wardData.code}`,
+            code: wardData.code.toString().padStart(5, '0'),
+            name: wardData.name,
+            full_name: wardData.name_with_type,
+            code_name: wardData.slug,
+            district_code: wardData.district_code,
+            administrative_unit_id: getAdministrativeUnitId(wardData.type),
+            is_active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         }
 
         res.status(StatusCodes.OK).json({
@@ -655,6 +308,12 @@ const getWardByCode = async (req, res, next) => {
             data: ward
         })
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Ward not found'
+            })
+        }
         console.error('❌ Error in getWardByCode:', error)
         next(error)
     }
@@ -662,12 +321,11 @@ const getWardByCode = async (req, res, next) => {
 
 const seedAddressData = async (req, res, next) => {
     try {
-        console.log('🌱 Starting address data seeding from API...')
-        await addressService.seedAddressData()
+        console.log('🌱 Address data seeding not needed - using external API')
 
         res.status(StatusCodes.OK).json({
             success: true,
-            message: 'Address data seeded successfully'
+            message: 'Address data seeding not needed - using external API'
         })
     } catch (error) {
         console.error('❌ Error in seedAddressData controller:', error)
