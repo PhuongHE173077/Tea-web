@@ -17,6 +17,7 @@ import ShipDashboard from "@/pages/admin/ship/ShipDashboard";
 import CreateShipConfig from "@/pages/admin/ship/CreateShipConfig";
 import EditShipConfig from "@/pages/admin/ship/EditShipConfig";
 import { Router } from "@/types/router";
+import CreateOrder from "@/pages/admin/order/create.order";
 
 export const adminRouter: Router[] = [
     {
@@ -81,5 +82,8 @@ export const adminRouter: Router[] = [
     }, {
         path: "/admin/ship/edit/:id",
         element: <EditShipConfig />
+    }, {
+        path: "/orders/new",
+        element: <CreateOrder />
     }
 ]

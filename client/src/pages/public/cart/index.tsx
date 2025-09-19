@@ -108,24 +108,30 @@ export default function CartPage() {
     }
 
     if (loading) {
-        return <div className="container mx-auto px-4 py-8">Đang tải...</div>
+        return (
+            <div className="min-h-screen bg-white">
+                <div className="container mx-auto px-4 py-8">Đang tải...</div>
+            </div>
+        )
     }
 
     if (cartItems.length === 0) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <Card className="max-w-md mx-auto text-center">
-                    <CardContent className="p-8">
-                        <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                        <h2 className="text-xl font-semibold mb-2">Giỏ hàng trống</h2>
-                        <p className="text-muted-foreground mb-4">
-                            Bạn chưa thêm sản phẩm nào vào giỏ hàng
-                        </p>
-                        <Button onClick={() => window.history.back()}>
-                            Tiếp tục mua sắm
-                        </Button>
-                    </CardContent>
-                </Card>
+            <div className="min-h-screen bg-white">
+                <div className="container mx-auto px-4 py-8">
+                    <Card className="max-w-md mx-auto text-center">
+                        <CardContent className="p-8">
+                            <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                            <h2 className="text-xl font-semibold mb-2">Giỏ hàng trống</h2>
+                            <p className="text-muted-foreground mb-4">
+                                Bạn chưa thêm sản phẩm nào vào giỏ hàng
+                            </p>
+                            <Button onClick={() => window.history.back()}>
+                                Tiếp tục mua sắm
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         )
     }
@@ -133,32 +139,34 @@ export default function CartPage() {
     const total = getCartTotal()
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold">Giỏ hàng của bạn</h1>
-                <Button variant="outline" onClick={handleClearCart}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Xóa tất cả
-                </Button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    <CartTable
-                        cartItems={cartItems}
-                        formatPrice={formatPrice}
-                        handleUpdateQuantity={handleUpdateQuantity}
-                        handleRemoveItem={handleRemoveItem}
-                        loadCartData={loadCartData}
-                    />
-                    <CouponSection onDiscountApplied={handleDiscountApplied} />
+        <div className="min-h-screen bg-white">
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-bold">Giỏ hàng của bạn</h1>
+                    <Button variant="outline" onClick={handleClearCart}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Xóa tất cả
+                    </Button>
                 </div>
 
-                <CartSummary
-                    total={total}
-                    formatPrice={formatPrice}
-                    appliedDiscount={appliedDiscount}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-6">
+                        <CartTable
+                            cartItems={cartItems}
+                            formatPrice={formatPrice}
+                            handleUpdateQuantity={handleUpdateQuantity}
+                            handleRemoveItem={handleRemoveItem}
+                            loadCartData={loadCartData}
+                        />
+                        <CouponSection onDiscountApplied={handleDiscountApplied} />
+                    </div>
+
+                    <CartSummary
+                        total={total}
+                        formatPrice={formatPrice}
+                        appliedDiscount={appliedDiscount}
+                    />
+                </div>
             </div>
         </div>
     )

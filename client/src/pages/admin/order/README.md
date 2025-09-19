@@ -1,154 +1,108 @@
-# Order Management - Quản lý Đơn hàng
+# Enhanced Product Search for Order Creation
 
 ## Tổng quan
 
-Trang quản lý đơn hàng cho admin trong ứng dụng Tea-web, cho phép xem, quản lý và cập nhật trạng thái các đơn hàng.
+Tính năng tìm kiếm sản phẩm đã được cải thiện với các chức năng sau:
 
-## Cấu trúc Files
+### ✨ Tính năng mới
 
-```
-client/src/pages/admin/order/
-├── index.tsx           # Component chính OrderManagement
-├── types/
-│   └── index.ts       # Types và interfaces cho Order
-└── README.md          # Tài liệu hướng dẫn
-```
+1. **Debounced Search**: Tìm kiếm với độ trễ 400ms để tránh gọi API quá nhiều
+2. **Real-time Search Dropdown**: Hiển thị kết quả tìm kiếm dưới dạng dropdown
+3. **Smart Product Selection**: Click để thêm sản phẩm vào đơn hàng
+4. **Enhanced UX**: Loading states, error handling, và empty states
 
-## Tính năng chính
+### 🔧 Cấu trúc Code
 
-### 1. Hiển thị danh sách đơn hàng
-- **Desktop**: Hiển thị dưới dạng bảng với đầy đủ thông tin
-- **Mobile**: Hiển thị dưới dạng card responsive
-- Thông tin hiển thị:
-  - Mã đơn hàng và tracking number
-  - Thông tin khách hàng (tên, SĐT, email)
-  - Danh sách sản phẩm
-  - Tổng tiền đơn hàng
-  - Phương thức thanh toán
-  - Trạng thái đơn hàng
-  - Ngày đặt hàng
+#### Custom Hooks
 
-### 2. Quản lý trạng thái đơn hàng
-- Dropdown select để cập nhật trạng thái
-- Các trạng thái có sẵn:
-  - **Chờ xác nhận** (pending)
-  - **Đã xác nhận** (confirmed)
-  - **Đang giao hàng** (shipping)
-  - **Đã giao** (delivered)
-  - **Đã hủy** (cancelled)
-- Cập nhật real-time với API
-- Hiển thị màu sắc khác nhau cho từng trạng thái
+**`useDebounce.ts`**
+- Hook để debounce giá trị input
+- Giúp giảm số lượng API calls khi user đang gõ
 
-### 3. Modal chi tiết đơn hàng
-- Hiển thị đầy đủ thông tin đơn hàng
-- **Thông tin khách hàng**: Tên, SĐT, email, ghi chú
-- **Địa chỉ giao hàng**: Địa chỉ đầy đủ với tỉnh/thành, quận/huyện, phường/xã
-- **Thông tin thanh toán**: Phương thức và trạng thái thanh toán
-- **Chi tiết sản phẩm**: Hình ảnh, tên, thuộc tính, giá, số lượng
-- **Tổng kết đơn hàng**: Tạm tính, phí ship, giảm giá, tổng cộng
-- **Cập nhật trạng thái**: Có thể thay đổi trạng thái trực tiếp trong modal
+**`useProductSearch.ts`**
+- Hook chính cho tính năng search
+- Quản lý state: results, loading, error
+- Tích hợp debounce và API calls
 
-### 4. Filtering và Pagination
-- **Lọc theo trạng thái**: Dropdown để lọc đơn hàng theo trạng thái
-- **Phân trang**: Hỗ trợ phân trang với các tùy chọn số lượng hiển thị (5, 10, 20, 50)
-- **URL parameters**: Lưu trạng thái filter và pagination trong URL
+#### Components
 
-### 5. Responsive Design
-- **Desktop**: Bảng đầy đủ thông tin với tooltip
-- **Mobile**: Card layout tối ưu cho màn hình nhỏ
-- **Loading states**: Skeleton loading cho trải nghiệm tốt hơn
+**`ProductSearchDropdown.tsx`**
+- Component hiển thị kết quả tìm kiếm
+- Hỗ trợ loading, error, và empty states
+- Responsive design với custom styling
 
-## API Integration
+**`create.order.tsx` (Updated)**
+- Tích hợp search dropdown
+- Xử lý product selection
+- Quản lý state cho search visibility
 
-### Endpoints sử dụng:
-- `getAllOrdersAPIs(filters)`: Lấy danh sách đơn hàng với filter
-- `updateOrderStatusAPIs(orderId, status, note)`: Cập nhật trạng thái đơn hàng
+**`ProductTable.tsx` (Simplified)**
+- Loại bỏ logic search cũ
+- Tập trung vào hiển thị products đã chọn
 
-### Filters hỗ trợ:
-```typescript
-interface OrderFilters {
-    page?: number
-    limit?: number
-    status?: string
-    search?: string
-    start_date?: string
-    end_date?: string
-    sort_by?: string
-    sort_order?: 'asc' | 'desc'
-}
-```
+### 🎨 Styling
 
-## Types và Interfaces
+**`create.order.css` (Enhanced)**
+- Custom styles cho search dropdown
+- Smooth animations và transitions
+- Responsive design
+- Custom scrollbar
 
-### Order Interface:
-```typescript
-interface Order {
-    _id: string
-    order_id: string
-    order_trackingNumber: string
-    order_status: 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
-    order_items: OrderItem[]
-    customer_info: OrderCustomer
-    order_shipping: OrderShipping
-    order_payment: OrderPayment
-    order_checkout: OrderCheckout
-    discount_code?: string
-    order_notes?: string
-    createdAt: string
-    updatedAt: string
-}
-```
+### 📱 Cách sử dụng
 
-## Routing
+1. **Tìm kiếm sản phẩm**:
+   - Nhập tên sản phẩm vào ô search
+   - Dropdown sẽ hiển thị kết quả sau 400ms
+   - Hiển thị loading state khi đang tìm kiếm
 
-Route được thêm vào `client/src/routers/admin.router.tsx`:
-```typescript
-{
-    path: "/orders",
-    element: <OrderManagement />
-}
-```
+2. **Chọn sản phẩm**:
+   - Click vào sản phẩm trong dropdown để thêm vào đơn hàng
+   - Nếu sản phẩm đã có, số lượng sẽ tăng lên 1
+   - Search sẽ được clear sau khi chọn
 
-Truy cập tại: `/orders` trong admin panel
+3. **Quản lý search**:
+   - Click nút X để clear search
+   - Click outside dropdown để đóng
+   - Focus vào input để mở lại dropdown (nếu có query)
 
-## Styling và UI
+### 🔍 API Integration
 
-- Sử dụng **Tailwind CSS** cho styling
-- **Framer Motion** cho animations
-- **Lucide React** cho icons
-- **ShadCN UI** components:
-  - Table, Card, Dialog, Badge
-  - Select, Button, Pagination
-  - Tooltip cho UX tốt hơn
+- Sử dụng `fetchProductsAPIs` với parameter `search`
+- Giới hạn 20 kết quả mỗi lần search
+- Error handling cho network issues
 
-## Error Handling
+### 🎯 Performance Optimizations
 
-- **SweetAlert2** cho thông báo lỗi và thành công
-- **Try-catch** blocks cho tất cả API calls
-- **Loading states** và **error states** được xử lý đầy đủ
+1. **Debouncing**: Giảm API calls
+2. **Memoization**: Tối ưu re-renders
+3. **Lazy Loading**: Chỉ load khi cần thiết
+4. **Smart State Management**: Tránh unnecessary updates
 
-## Performance
+### 🐛 Error Handling
 
-- **Lazy loading** với pagination
-- **Optimistic updates** cho trạng thái đơn hàng
-- **Memoization** cho các component con (có thể thêm nếu cần)
+- Network errors được hiển thị trong dropdown
+- Fallback images cho sản phẩm
+- Graceful degradation khi API fails
 
-## Cách sử dụng
+### 📋 Future Enhancements
 
-1. **Truy cập trang**: Vào admin panel và click vào "Đơn hàng" trong sidebar
-2. **Xem danh sách**: Danh sách đơn hàng sẽ hiển thị với pagination
-3. **Lọc đơn hàng**: Sử dụng dropdown "Lọc theo trạng thái"
-4. **Xem chi tiết**: Click nút "Xem chi tiết" (icon mắt)
-5. **Cập nhật trạng thái**: 
-   - Trong bảng: Click vào dropdown trạng thái
-   - Trong modal: Sử dụng select ở cuối modal
-6. **Phân trang**: Sử dụng các nút phân trang ở cuối trang
+- [ ] Keyboard navigation (Arrow keys, Enter, Escape)
+- [ ] Search history
+- [ ] Advanced filters trong search
+- [ ] Barcode scanning integration
+- [ ] Bulk product addition
 
-## Tương lai có thể mở rộng
+### 🔧 Technical Notes
 
-- **Tìm kiếm**: Thêm ô tìm kiếm theo tên khách hàng, mã đơn hàng
-- **Export**: Xuất danh sách đơn hàng ra Excel/PDF
-- **Bulk actions**: Cập nhật trạng thái nhiều đơn hàng cùng lúc
-- **Order timeline**: Hiển thị lịch sử thay đổi trạng thái
-- **Print**: In hóa đơn/phiếu giao hàng
-- **Statistics**: Thống kê đơn hàng theo thời gian, trạng thái
+- TypeScript được sử dụng cho type safety
+- React hooks pattern cho state management
+- CSS-in-JS approach với Tailwind classes
+- Responsive design principles
+- Accessibility considerations
+
+### 📝 Maintenance
+
+- Regular testing của search functionality
+- Monitor API performance
+- Update styling theo design system
+- Optimize search algorithms nếu cần
