@@ -18,6 +18,7 @@ import {
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { useLocation, useNavigate } from "react-router-dom"
+import { useTabContext } from "@/contexts/TabContext"
 
 export function NavMain({
     items,
@@ -35,7 +36,20 @@ export function NavMain({
 }) {
 
     const location = useLocation();
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const { createNewTab, tabs } = useTabContext();
+
+    const handleNavigation = (title: string, url: string) => {
+        // Check if tab already exists
+        const existingTab = tabs.find(tab => tab.url === url);
+        if (existingTab) {
+            // If tab exists, just switch to it
+            navigate(url);
+        } else {
+            // Create new tab next to current tab
+            createNewTab(title, url, true);
+        }
+    };
     return (
         <SidebarGroup>
             <SidebarMenu>
@@ -51,7 +65,11 @@ export function NavMain({
                                 <SidebarMenuButton tooltip={item.title}
                                     className={location.pathname.startsWith(item.url) ? "bg-green-200 border border-green-500" : ""}
                                     onClick={() => {
-                                        item.items && item.items.length > 0 ? null : navigate(item.url)
+                                        if (item.items && item.items.length > 0) {
+                                            // Do nothing for collapsible items
+                                            return;
+                                        }
+                                        handleNavigation(item.title, item.url);
                                     }}
                                 >
                                     {item.icon && <item.icon />}
@@ -63,10 +81,11 @@ export function NavMain({
                                 {item.items && item.items.length > 0 && <SidebarMenuSub>
                                     {item.items?.map((subItem) => (
                                         <SidebarMenuSubItem key={subItem.title}>
-                                            <SidebarMenuSubButton asChild className={location.pathname === subItem.url ? "bg-green-100 border border-green-300" : ""}>
-                                                <a href={subItem.url}>
-                                                    <span>{subItem.title}</span>
-                                                </a>
+                                            <SidebarMenuSubButton
+                                                className={location.pathname === subItem.url ? "bg-green-100 border border-green-300" : ""}
+                                                onClick={() => handleNavigation(subItem.title, subItem.url)}
+                                            >
+                                                <span>{subItem.title}</span>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     ))}

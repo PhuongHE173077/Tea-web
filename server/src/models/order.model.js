@@ -43,14 +43,12 @@ const orderSchema = new Schema({
         },
         email: {
             type: String,
-            required: true,
             trim: true,
             lowercase: true,
             match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
         },
         address: {
             type: String,
-            required: true,
             trim: true,
             maxlength: [500, 'Address cannot exceed 500 characters']
         },

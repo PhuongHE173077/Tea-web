@@ -12,6 +12,7 @@ import { ToastContainer } from "react-toastify";
 import DashboardLayout from "./layout/admin";
 import { adminRouter } from "./routers/admin.router";
 import { injectStore } from "./services/axios.customize";
+import CreateOrder from "./pages/admin/order/create.order";
 
 const persistor = persistStore(store);
 
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/dang-nhap" element={<Login />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/orders/new" element={<CreateOrder />} />
 
             <Route element={<PublicLayout />}>
               {publicRouter.map((route, index) => (

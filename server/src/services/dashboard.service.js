@@ -12,11 +12,11 @@ import { StatusCodes } from 'http-status-codes'
 const getDashboardStats = async (filters = {}) => {
     try {
         const { period = 'month', startDate, endDate } = filters
-        
+
         // Tính toán khoảng thời gian
         const now = new Date()
         let currentPeriodStart, previousPeriodStart, previousPeriodEnd
-        
+
         switch (period) {
             case 'week':
                 currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
@@ -174,10 +174,10 @@ const getDashboardStats = async (filters = {}) => {
 const getRevenueChartData = async (filters = {}) => {
     try {
         const { period = 'month' } = filters
-        
+
         let groupBy, dateFormat, periods
         const now = new Date()
-        
+
         switch (period) {
             case 'week':
                 // Last 7 days
@@ -235,12 +235,12 @@ const getRevenueChartData = async (filters = {}) => {
         const result = periods.map(period => {
             const data = revenueData.find(item => item._id === period)
             let month = period
-            
+
             if (period.includes('-')) {
                 const [year, monthNum] = period.split('-')
                 month = `T${parseInt(monthNum)}`
             }
-            
+
             return {
                 month,
                 revenue: data?.revenue || 0,
@@ -418,11 +418,7 @@ const getRecentOrders = async (limit = 5) => {
             .select('order_trackingNumber order_customer order_checkout order_status createdAt')
             .lean()
 
-        console.log('📦 Recent Orders raw data:', orders.map(o => ({
-            id: o.order_trackingNumber,
-            checkout: o.order_checkout,
-            customer: o.order_customer
-        })))
+
 
         return orders.map(order => ({
             id: order.order_trackingNumber,

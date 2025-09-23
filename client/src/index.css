@@ -158,3 +158,13 @@ All colors MUST be HSL.
   padding: 16px;
   color: hsl(30 20% 20%);
 }
+
+/* Tab system styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

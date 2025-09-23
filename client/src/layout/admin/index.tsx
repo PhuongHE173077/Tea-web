@@ -18,10 +18,24 @@ import { useSelector } from "react-redux"
 import { fetchUserAPIs, selectCurrentUser } from "@/store/slice/userSlice"
 import { useAppDispatch } from "@/hooks/useDispatch"
 import { useEffect } from "react"
+import { TabProvider } from "@/contexts/TabContext"
+import { TabLayout } from "@/components/TabLayout"
+import { Tab } from "@/hooks/useTabManager"
 
 export default function DashboardLayout() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
+    // Initial tabs - Dashboard tab is always present and not closable
+    const initialTabs: Tab[] = [
+        {
+            id: 'dashboard-main',
+            title: 'Dashboard',
+            url: '/dashboard',
+            isActive: true,
+            isClosable: false
+        }
+    ];
 
     useEffect(() => {
         dispatch(fetchUserAPIs()).then((response) => {
@@ -30,31 +44,32 @@ export default function DashboardLayout() {
             }
         })
     }, [dispatch])
+
     return (
-        <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator
-                        orientation="vertical"
-                        className="mr-2 data-[orientation=vertical]:h-4"
-                    />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink >
-                                    Quản trị hệ thống
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                    <Bell className="mr-5 ml-auto" size={20} />
-                </header>
-                <div className="flex flex-1 flex-col gap-4 p-4">
-                    <Outlet />
-                </div>
-            </SidebarInset>
-        </SidebarProvider>
+        <TabProvider initialTabs={initialTabs}>
+            <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator
+                            orientation="vertical"
+                            className="mr-2 data-[orientation=vertical]:h-4"
+                        />
+                        <Breadcrumb>
+                            <BreadcrumbList>
+                                <BreadcrumbItem className="hidden md:block">
+                                    <BreadcrumbLink >
+                                        Quản trị hệ thống
+                                    </BreadcrumbLink>
+                                </BreadcrumbItem>
+                            </BreadcrumbList>
+                        </Breadcrumb>
+                        <Bell className="mr-5 ml-auto" size={20} />
+                    </header>
+                    <TabLayout className="flex flex-1 flex-col" />
+                </SidebarInset>
+            </SidebarProvider>
+        </TabProvider>
     )
 }

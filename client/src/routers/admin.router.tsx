@@ -18,6 +18,7 @@ import CreateShipConfig from "@/pages/admin/ship/CreateShipConfig";
 import EditShipConfig from "@/pages/admin/ship/EditShipConfig";
 import MarkdownTest from "@/pages/debug/MarkdownTest";
 import { Router } from "@/types/router";
+import CreateOrder from "@/pages/admin/order/create.order";
 
 export const adminRouter: Router[] = [
     {
@@ -85,5 +86,8 @@ export const adminRouter: Router[] = [
     }, {
         path: "/debug/markdown",
         element: <MarkdownTest />
+    }, {
+        path: "/orders/new",
+        element: <CreateOrder />
     }
 ]

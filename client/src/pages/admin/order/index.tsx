@@ -34,6 +34,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { motion } from "framer-motion"
@@ -45,15 +46,17 @@ import {
     MapPin,
     CreditCard,
     Calendar,
-    Truck
+    Truck,
+    List,
+    PlusCircle
 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import Swal from "sweetalert2"
-import { 
-    Order, 
-    OrderFilters, 
-    ORDER_STATUS_LABELS, 
+import {
+    Order,
+    OrderFilters,
+    ORDER_STATUS_LABELS,
     ORDER_STATUS_COLORS,
     PAYMENT_METHOD_LABELS,
     PAYMENT_STATUS_COLORS,
@@ -62,6 +65,11 @@ import {
 
 export default function OrderManagement() {
     const isMobile = useIsMobile()
+    const navigate = useNavigate()
+
+    // State cho navigation tabs (Danh sách / Tạo)
+    const [activeNavTab, setActiveNavTab] = useState('list')
+
     const [open, setOpen] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
     const [orders, setOrders] = useState<Order[]>([])
@@ -223,6 +231,15 @@ export default function OrderManagement() {
         }
     }
 
+    // Hàm xử lý chuyển đổi giữa Danh sách và Tạo
+    const handleNavTabChange = (value: string) => {
+        if (value === 'create') {
+            navigate('/orders/new')
+        } else {
+            setActiveNavTab('list')
+        }
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -230,6 +247,28 @@ export default function OrderManagement() {
             transition={{ duration: 0.4 }}
             className="p-6"
         >
+            {/* Navigation Tabs - Danh sách / Tạo */}
+            <div className="mb-6">
+                <Tabs value={activeNavTab} onValueChange={handleNavTabChange} className="w-full">
+                    <TabsList className="grid w-fit grid-cols-2 bg-gray-100">
+                        <TabsTrigger
+                            value="list"
+                            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-tea-green"
+                        >
+                            <List className="h-4 w-4" />
+                            Danh sách
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="create"
+                            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-tea-green"
+                        >
+                            <PlusCircle className="h-4 w-4" />
+                            Tạo
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
+
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">🛒 Quản lý Đơn hàng</h2>
                 <div className="flex items-center gap-4">

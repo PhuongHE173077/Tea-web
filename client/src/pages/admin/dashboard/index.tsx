@@ -36,6 +36,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import useDashboard from '@/hooks/useDashboard'
+import TabDemo from '@/components/TabDemo'
 
 // Mock data đã được chuyển vào useDashboard hook
 
@@ -609,6 +610,9 @@ export default function Dashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Tab Demo Section */}
+      <TabDemo />
     </div>
   )
 }

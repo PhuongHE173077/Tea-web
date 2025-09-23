@@ -6,13 +6,13 @@ import { shipService } from "./ship.service"
 
 const createOrder = async (orderData) => {
     try {
-        const { 
-            customer_info, 
-            cart_items, 
-            discount_code, 
+        const {
+            customer_info,
+            cart_items,
+            discount_code,
             shipping_address,
             payment_method = 'cod',
-            user_id = null 
+            user_id = null
         } = orderData
 
         // Validate cart items
@@ -39,11 +39,11 @@ const createOrder = async (orderData) => {
         if (discount_code) {
             try {
                 const discountResult = await discountService.validateDiscountCode(
-                    discount_code, 
-                    user_id, 
+                    discount_code,
+                    user_id,
                     subtotal
                 )
-                
+
                 if (discountResult.valid) {
                     discountInfo = {
                         discount_id: discountResult.discount.id,
@@ -196,7 +196,7 @@ const getOrderByTrackingNumber = async (trackingNumber) => {
 const getUserOrders = async (userId, filters = {}) => {
     try {
         const { page = 1, limit = 10, status } = filters
-        
+
         const query = { order_userId: userId }
         if (status) {
             query.order_status = status
@@ -228,7 +228,7 @@ const getUserOrders = async (userId, filters = {}) => {
 const updateOrderStatus = async (orderId, newStatus, note = '', updatedBy = null) => {
     try {
         const order = await Order.findById(orderId)
-        
+
         if (!order) {
             throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found')
         }
@@ -245,7 +245,7 @@ const updateOrderStatus = async (orderId, newStatus, note = '', updatedBy = null
 
         if (!validTransitions[order.order_status].includes(newStatus)) {
             throw new ApiError(
-                StatusCodes.BAD_REQUEST, 
+                StatusCodes.BAD_REQUEST,
                 `Cannot change status from ${order.order_status} to ${newStatus}`
             )
         }
@@ -276,10 +276,10 @@ const updateOrderStatus = async (orderId, newStatus, note = '', updatedBy = null
 
 const getAllOrders = async (filters = {}) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            status, 
+        const {
+            page = 1,
+            limit = 10,
+            status,
             search,
             start_date,
             end_date,
@@ -288,7 +288,7 @@ const getAllOrders = async (filters = {}) => {
         } = filters
 
         const query = {}
-        
+
         if (status) {
             query.order_status = status
         }
@@ -454,9 +454,9 @@ const getCustomers = async (filters = {}) => {
 
         // Add sorting
         const sortField = sort_by === 'total_spent' ? 'total_spent' :
-                         sort_by === 'total_orders' ? 'total_orders' :
-                         sort_by === 'last_order_date' ? 'last_order_date' :
-                         sort_by === 'customer_name' ? 'customer_name' : 'total_spent'
+            sort_by === 'total_orders' ? 'total_orders' :
+                sort_by === 'last_order_date' ? 'last_order_date' :
+                    sort_by === 'customer_name' ? 'customer_name' : 'total_spent'
 
         const sortDirection = sort_order === 'asc' ? 1 : -1
         pipeline.push({ $sort: { [sortField]: sortDirection } })
