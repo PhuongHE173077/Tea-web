@@ -20,7 +20,7 @@ const START_SERVER = () => {
 
   app.use(cookieParser())
 
-  const hostname = env.APP_HOST
+  const hostname = env.BUILD_MODE === 'production' ? '0.0.0.0' : 'localhost'
   const port = env.APP_POST
 
   app.use(cors(corsOptions))
