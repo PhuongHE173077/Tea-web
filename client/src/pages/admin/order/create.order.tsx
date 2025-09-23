@@ -8,37 +8,13 @@ import OrderSummary from './components/OrderSummary'
 import CustomerInfo from './components/CustomerInfo'
 import ProductTable from './components/ProductTable'
 import ProductSearchDropdown from './components/ProductSearchDropdown'
+import ProductAttributeDialog from './components/ProductAttributeDialog'
 import { useProductSearch } from '@/hooks/useProductSearch'
+import { OrderProduct, OrderTab, SelectedProductAttribute } from './types'
+import { createOrderAPIs } from '@/apis/order.apis'
 
 // Interface cho tab đơn hàng
-interface OrderTab {
-    id: string
-    name: string
-    products: OrderProduct[]
-    customerInfo?: CustomerInfos
-    isActive: boolean
-}
 
-// Interface cho sản phẩm trong đơn hàng
-interface OrderProduct {
-    _id: string
-    product_name: string
-    product_thumb: string
-    product_basePrice: number
-    quantity: number
-    size?: string
-    price: number
-    total: number
-}
-
-// Interface cho thông tin khách hàng
-interface CustomerInfos {
-    name: string
-    phone: string
-    email: string
-    address: string
-    note?: string
-}
 
 export default function CreateOrder() {
     const [tabs, setTabs] = useState<OrderTab[]>([
@@ -52,6 +28,10 @@ export default function CreateOrder() {
     const [activeTab, setActiveTab] = useState('1')
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchDropdownVisible, setIsSearchDropdownVisible] = useState(false)
+
+    // State cho dialog chọn thuộc tính
+    const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false)
+    const [selectedProductForAttributes, setSelectedProductForAttributes] = useState<Product | null>(null)
 
     // Refs
     const searchInputRef = useRef<HTMLInputElement>(null)
@@ -167,39 +147,80 @@ export default function CreateOrder() {
 
     // Handler cho việc chọn sản phẩm từ search results
     const handleProductSelect = (product: Product) => {
+        // Kiểm tra xem sản phẩm có thuộc tính hay không
+        const hasAttributes = product.product_attribute && product.product_attribute.length > 0
+
+        if (hasAttributes) {
+            // Nếu có thuộc tính, hiển thị dialog để chọn
+            setSelectedProductForAttributes(product)
+            setIsAttributeDialogOpen(true)
+        } else {
+            // Nếu không có thuộc tính, thêm trực tiếp vào đơn hàng
+            addProductToOrder(product, [], product.product_basePrice)
+        }
+
+        // Clear search sau khi chọn sản phẩm
+        handleClearSearch()
+    }
+
+    // Hàm thêm sản phẩm vào đơn hàng
+    const addProductToOrder = (
+        product: Product,
+        selectedAttributes: SelectedProductAttribute[],
+        finalPrice: number
+    ) => {
         const currentTab = tabs.find(tab => tab.id === activeTab)
         if (!currentTab) return
 
-        const existingProduct = currentTab.products.find(p => p._id === product._id)
+        // Tạo key duy nhất cho sản phẩm dựa trên ID và thuộc tính đã chọn
+        const attributeKey = selectedAttributes
+            .map(attr => `${attr.name}-${attr.unit}`)
+            .sort()
+            .join('|')
+        const productKey = `${product._id}${attributeKey ? `-${attributeKey}` : ''}`
 
-        if (existingProduct) {
-            // Nếu sản phẩm đã có, tăng số lượng
-            const updatedProducts = currentTab.products.map(p => {
-                if (p._id === product._id) {
-                    const newQuantity = p.quantity + 1
-                    return {
-                        ...p,
-                        quantity: newQuantity,
-                        total: p.price * newQuantity
-                    }
-                }
-                return p
-            })
+        // Kiểm tra xem sản phẩm với thuộc tính này đã có trong đơn hàng chưa
+        const existingProductIndex = currentTab.products.findIndex(p => {
+            const existingAttributeKey = (p.selectedAttributes || [])
+                .map(attr => `${attr.name}-${attr.unit}`)
+                .sort()
+                .join('|')
+            const existingProductKey = `${p._id}${existingAttributeKey ? `-${existingAttributeKey}` : ''}`
+            return existingProductKey === productKey
+        })
+
+        if (existingProductIndex !== -1) {
+            // Nếu sản phẩm với thuộc tính này đã có, tăng số lượng
+            const updatedProducts = [...currentTab.products]
+            const existingProduct = updatedProducts[existingProductIndex]
+            const newQuantity = existingProduct.quantity + 1
+
+            updatedProducts[existingProductIndex] = {
+                ...existingProduct,
+                quantity: newQuantity,
+                total: finalPrice * newQuantity
+            }
 
             const updatedTabs = tabs.map(t =>
                 t.id === activeTab ? { ...t, products: updatedProducts } : t
             )
             setTabs(updatedTabs)
         } else {
-            // Thêm sản phẩm mới
+            // Thêm sản phẩm mới với thuộc tính đã chọn
+            const attributeDisplayName = selectedAttributes.length > 0
+                ? selectedAttributes.map(attr => `${attr.name} (${attr.unit})`).join(', ')
+                : undefined
+
             const newOrderProduct: OrderProduct = {
                 _id: product._id,
                 product_name: product.product_name,
                 product_thumb: product.product_thumb,
                 product_basePrice: product.product_basePrice,
+                selectedAttributes: selectedAttributes.length > 0 ? selectedAttributes : undefined,
                 quantity: 1,
-                price: product.product_basePrice,
-                total: product.product_basePrice
+                price: finalPrice,
+                total: finalPrice,
+                attributeDisplayName
             }
 
             const updatedTabs = tabs.map(t =>
@@ -207,13 +228,36 @@ export default function CreateOrder() {
             )
             setTabs(updatedTabs)
         }
+    }
 
-        // Clear search sau khi thêm sản phẩm
-        handleClearSearch()
+    // Handler cho việc xác nhận chọn thuộc tính
+    const handleAttributeConfirm = (selectedAttributes: SelectedProductAttribute[], finalPrice: number) => {
+        if (selectedProductForAttributes) {
+            addProductToOrder(selectedProductForAttributes, selectedAttributes, finalPrice)
+        }
+        setIsAttributeDialogOpen(false)
+        setSelectedProductForAttributes(null)
+    }
+
+    // Handler cho việc đóng dialog thuộc tính
+    const handleAttributeDialogClose = () => {
+        setIsAttributeDialogOpen(false)
+        setSelectedProductForAttributes(null)
     }
 
     // Lấy tab hiện tại
     const currentTab = tabs.find(tab => tab.id === activeTab)
+
+    // const createOrder = async () => {
+    //     const dataAddOrder = {
+    //         customer_info: currentTab?.customerInfo,
+    //         cart_items: currentTab?.products,
+    //         discount_code: '',
+    //         shipping_address: currentTab?.customerInfo?.address,
+    //         payment_method: 'cod'
+    //     }
+    //     await createOrderAPIs(dataAddOrder)
+    // }
 
     return (
         <div className="h-screen flex flex-col bg-green-50">
@@ -333,12 +377,23 @@ export default function CreateOrder() {
                             <OrderSummary
                                 products={currentTab.products}
                                 onCreateOrder={() => { }}
+                                orderTab={currentTab}
                             />
 
                         </>
                     )}
                 </div>
             </div>
+
+            {/* Dialog chọn thuộc tính sản phẩm */}
+            {selectedProductForAttributes && (
+                <ProductAttributeDialog
+                    isOpen={isAttributeDialogOpen}
+                    onClose={handleAttributeDialogClose}
+                    product={selectedProductForAttributes}
+                    onConfirm={handleAttributeConfirm}
+                />
+            )}
         </div>
     )
 }

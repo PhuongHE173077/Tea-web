@@ -1,17 +1,9 @@
 import React from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Minus, Plus, Trash2 } from 'lucide-react'
-
-interface OrderProduct {
-    _id: string
-    product_name: string
-    product_thumb: string
-    product_basePrice: number
-    quantity: number
-    price: number
-    total: number
-}
+import { OrderProduct } from '../types'
 
 interface ProductTableProps {
     products: OrderProduct[]
@@ -23,15 +15,15 @@ export default function ProductTable({
     onProductsChange
 }: ProductTableProps) {
 
-    // Cập nhật số lượng
-    const updateQuantity = (productId: string, newQuantity: number) => {
+    // Cập nhật số lượng - cần so sánh cả thuộc tính để tìm đúng sản phẩm
+    const updateQuantity = (productIndex: number, newQuantity: number) => {
         if (newQuantity <= 0) {
-            removeProduct(productId)
+            removeProduct(productIndex)
             return
         }
 
-        const updatedProducts = products.map(product => {
-            if (product._id === productId) {
+        const updatedProducts = products.map((product, index) => {
+            if (index === productIndex) {
                 const total = product.price * newQuantity
                 return { ...product, quantity: newQuantity, total }
             }
@@ -40,9 +32,9 @@ export default function ProductTable({
         onProductsChange(updatedProducts)
     }
 
-    // Xóa sản phẩm
-    const removeProduct = (productId: string) => {
-        const updatedProducts = products.filter(product => product._id !== productId)
+    // Xóa sản phẩm theo index
+    const removeProduct = (productIndex: number) => {
+        const updatedProducts = products.filter((_, index) => index !== productIndex)
         onProductsChange(updatedProducts)
     }
 
@@ -71,6 +63,7 @@ export default function ProductTable({
                                 <TableHead className="w-12">#</TableHead>
                                 <TableHead>Ảnh</TableHead>
                                 <TableHead>Sản phẩm</TableHead>
+                                <TableHead>Thuộc tính</TableHead>
                                 <TableHead>Đơn giá</TableHead>
                                 <TableHead>Số lượng</TableHead>
                                 <TableHead>Thành tiền</TableHead>
@@ -79,7 +72,7 @@ export default function ProductTable({
                         </TableHeader>
                         <TableBody>
                             {products.map((product, index) => (
-                                <TableRow key={product._id}>
+                                <TableRow key={`${product._id}-${index}`}>
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>
                                         <img
@@ -89,16 +82,38 @@ export default function ProductTable({
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">
-                                        {product.product_name}
+                                        <div>
+                                            <div>{product.product_name}</div>
+                                            {product.product_basePrice !== product.price && (
+                                                <div className="text-xs text-gray-500">
+                                                    Giá gốc: {formatPrice(product.product_basePrice)}
+                                                </div>
+                                            )}
+                                        </div>
                                     </TableCell>
-
+                                    <TableCell>
+                                        {product.selectedAttributes && product.selectedAttributes.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {product.selectedAttributes.map((attr, attrIndex) => (
+                                                    <Badge key={attrIndex} variant="secondary" className="text-xs">
+                                                        {attr.name === 'box' ? `Hộp ` : `Túi`}
+                                                        <span className="ml-1 text-blue-600">
+                                                            ({attr.unit})
+                                                        </span>
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">Không có</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell>{formatPrice(product.price)}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => updateQuantity(product._id, product.quantity - 1)}
+                                                onClick={() => updateQuantity(index, product.quantity - 1)}
                                             >
                                                 <Minus className="h-3 w-3" />
                                             </Button>
@@ -106,7 +121,7 @@ export default function ProductTable({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => updateQuantity(product._id, product.quantity + 1)}
+                                                onClick={() => updateQuantity(index, product.quantity + 1)}
                                             >
                                                 <Plus className="h-3 w-3" />
                                             </Button>
@@ -119,7 +134,7 @@ export default function ProductTable({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => removeProduct(product._id)}
+                                            onClick={() => removeProduct(index)}
                                             className="text-red-500 hover:text-red-700"
                                         >
                                             <Trash2 className="h-4 w-4" />

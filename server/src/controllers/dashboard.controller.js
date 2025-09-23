@@ -10,7 +10,6 @@ import { dashboardService } from '~/services/dashboard.service'
  */
 const getDashboardStats = async (req, res, next) => {
     try {
-        console.log('🔍 Dashboard Stats Controller - Query params:', req.query)
 
         const filters = {
             period: req.query.period || 'month',
@@ -18,11 +17,9 @@ const getDashboardStats = async (req, res, next) => {
             endDate: req.query.end_date
         }
 
-        console.log('🔍 Dashboard Stats Controller - Filters:', filters)
 
         const stats = await dashboardService.getDashboardStats(filters)
 
-        console.log('🔍 Dashboard Stats Controller - Result:', stats)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -44,7 +41,6 @@ const getDashboardStats = async (req, res, next) => {
  */
 const getRevenueChartData = async (req, res, next) => {
     try {
-        console.log('📊 Revenue Chart Controller - Query params:', req.query)
 
         const filters = {
             period: req.query.period || 'month',
@@ -54,7 +50,6 @@ const getRevenueChartData = async (req, res, next) => {
 
         const chartData = await dashboardService.getRevenueChartData(filters)
 
-        console.log('📊 Revenue Chart Controller - Data points:', chartData.length)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -62,7 +57,6 @@ const getRevenueChartData = async (req, res, next) => {
             data: chartData
         })
     } catch (error) {
-        console.error('📊 Revenue Chart Controller - Error:', error)
         next(error)
     }
 }
@@ -76,7 +70,6 @@ const getRevenueChartData = async (req, res, next) => {
  */
 const getUserGrowthChartData = async (req, res, next) => {
     try {
-        console.log('👥 User Growth Chart Controller - Query params:', req.query)
 
         const filters = {
             period: req.query.period || 'month',
@@ -86,7 +79,6 @@ const getUserGrowthChartData = async (req, res, next) => {
 
         const chartData = await dashboardService.getUserGrowthChartData(filters)
 
-        console.log('👥 User Growth Chart Controller - Data points:', chartData.length)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -108,7 +100,6 @@ const getUserGrowthChartData = async (req, res, next) => {
  */
 const getProductCategoryChartData = async (req, res, next) => {
     try {
-        console.log('🏷️ Product Category Chart Controller - Query params:', req.query)
 
         const filters = {
             period: req.query.period || 'month',
@@ -118,7 +109,6 @@ const getProductCategoryChartData = async (req, res, next) => {
 
         const chartData = await dashboardService.getProductCategoryChartData(filters)
 
-        console.log('🏷️ Product Category Chart Controller - Categories:', chartData.length)
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -126,7 +116,6 @@ const getProductCategoryChartData = async (req, res, next) => {
             data: chartData
         })
     } catch (error) {
-        console.error('🏷️ Product Category Chart Controller - Error:', error)
         next(error)
     }
 }
@@ -168,7 +157,6 @@ const getRecentOrders = async (req, res, next) => {
  */
 const getRealTimeStats = async (req, res, next) => {
     try {
-        console.log('⚡ Real-time Stats Controller')
 
         // Get today's stats
         const todayStats = await dashboardService.getDashboardStats({

@@ -1,12 +1,9 @@
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Download, Eye, FileText, Printer } from "lucide-react"
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, PDFViewer, Font, Image } from "@react-pdf/renderer"
 import dayjs from "dayjs"
 import { generateBarcodeDataUrl, generateOrderUrl } from "./barcode-generator"
+import { OrderTab } from "../types"
 const paddingItem = 30
 
 Font.register({
@@ -345,7 +342,11 @@ const styles = StyleSheet.create({
 
 
 // PDF Document Component
-const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: AdviceResponse[], user: any }) => {
+const InvoicePDF = ({ orderTab, companyAddress, user }: {
+  orderTab: OrderTab,
+  companyAddress: string[],
+  user: any
+}) => {
   const formatDate = (dateString?: string) => {
     const date = dateString ? new Date(dateString) : new Date()
     const day = date.getDate().toString().padStart(2, '0')
@@ -442,29 +443,25 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
   }
 
   // Calculate totals
-  const calculateOrderTotal = (order: subOrder) => {
-    return order.services.reduce((sum, service) => {
-      const discountAmount = parseFloat(service.discountAmount) || 0
-      return sum + service.unitPrice - discountAmount
-    }, 0)
+  const calculateOrderTotal = () => {
+    return orderTab.products.reduce((total, product) => total + product.total, 0)
   }
 
-  const totalAmount = orderTab.orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0)
-  const deliveryFee = orderTab.shipFee || 0
-  const discountAmount = orderTab.orders.reduce((sum, order) => sum + order.services.reduce((sum, service) => sum + parseFloat(service.discountAmount), 0), 0)
-  const paymentDiscount = orderTab.payment.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
+  const totalAmount = calculateOrderTotal()
+  const deliveryFee = 0
+  const discountAmount = 0
+  const paymentDiscount = 0
   const grandTotal = totalAmount + deliveryFee - paymentDiscount
 
   // Tạo mã vạch và URL cho đơn hàng
-  const orderId = orderTab.code || orderTab.name || 'DEFAULT'
+  const orderId = orderTab.id || orderTab.name || 'DEFAULT'
   const barcodeDataUrl = generateBarcodeDataUrl(orderId)
-  const orderUrl = generateOrderUrl(orderId)
+  // const orderUrl = generateOrderUrl(orderId)
 
   if (!Document || !Page || !Text || !View) {
     return null
   }
 
-  const companyAddress = user.companyBranch.address.split(",")
 
   return (
     <Document>
@@ -497,10 +494,10 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
 
           <View style={styles.divider} />
 
-          <Text style={styles.invoiceTitle}>HÓA ĐƠN DỊCH VỤ</Text>
+          <Text style={styles.invoiceTitle}>HÓA ĐƠN BÁN HÀNG</Text>
 
           <View style={styles.invoiceDetails}>
-            <Text style={styles.invoiceNumber}>{orderTab?.code}</Text>
+            <Text style={styles.invoiceNumber}>{orderTab?.name || orderTab?.id}</Text>
             <Text style={styles.invoiceDate}>Ngày {formatDate()}</Text>
           </View>
         </View>
@@ -521,7 +518,7 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
               <Text style={styles.customerLabel}>Điện thoại:</Text>
               <Text style={styles.customerValue}>{orderTab.customerInfo.phone}</Text>
             </View>
-            <Text style={styles.staffInfo}>Nhân viên bán hàng: FRSHDRP STAFF </Text>
+            <Text style={styles.staffInfo}>Nhân viên bán hàng: TEA SHOP STAFF </Text>
           </View>
         )}
 
@@ -534,68 +531,40 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
             <Text style={[styles.tableHeaderText, styles.totalColumn]}>THÀNH TIỀN</Text>
           </View>
 
-          {/* Service Items */}
-          {orderTab.orders.map((order, index) => (
-            <View key={order.id} style={styles.orderContainer}>
+          {/* Product Items */}
+          {orderTab.products.map((product, index) => (
+            <View key={product._id + index} style={styles.orderContainer}>
               {/* Product Title */}
               <Text style={styles.productTitle}>
-                {index + 1}. {order.name.toUpperCase()} | SIZE {order.size}
+                {index + 1}. {product.product_name.toUpperCase()}
+                {product.attributeDisplayName && ` | ${product.attributeDisplayName}`}
               </Text>
 
-              {/* Services */}
-              {order.services.map((service, serviceIndex) => {
-                const discountAmount = parseFloat(service.discountAmount) || 0
-                const finalPrice = service.unitPrice - discountAmount
-                const hasDiscount = discountAmount > 0
-
-                return (
-                  <View key={serviceIndex} style={styles.serviceItemRow}>
-                    <View style={styles.serviceNameContainer}>
-                      <Text style={styles.serviceItemText}>
-                        • {service.name.toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={styles.servicePriceContainer}>
-                      {hasDiscount ? (
-                        <View>
-                          <Text style={[styles.serviceItemPrice, { textDecoration: 'line-through', color: '#666' }]}>
-                            {formatCurrency(service.unitPrice)}
-                          </Text>
-                          <Text style={styles.serviceItemPrice}>
-                            - {formatCurrency(Number(service.discountAmount))}
-                          </Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.serviceItemPrice}>
-                          {formatCurrency(service.unitPrice)}
-                        </Text>
-                      )}
-                    </View>
-                    <View style={styles.serviceTotalContainer}>
-                      <Text style={styles.serviceItemTotal}>
-                        {formatCurrency(finalPrice)}
-                      </Text>
-                    </View>
-                  </View>
-                )
-              })}
-
-              {/* Order Note */}
-              {order.advice && (
-                order.advice.map(a => (
-                  <Text key={a} style={styles.orderNote}>
-                    {advices?.find(ad => ad.id == a)?.title}
+              {/* Product Details */}
+              <View style={styles.serviceItemRow}>
+                <View style={styles.serviceNameContainer}>
+                  <Text style={styles.serviceItemText}>
+                    • Số lượng: {product.quantity}
                   </Text>
-                ))
+                </View>
+                <View style={styles.servicePriceContainer}>
+                  <Text style={styles.serviceItemPrice}>
+                    {formatCurrency(product.price)}
+                  </Text>
+                </View>
+                <View style={styles.serviceTotalContainer}>
+                  <Text style={styles.serviceItemTotal}>
+                    {formatCurrency(product.total)}
+                  </Text>
+                </View>
+              </View>
 
-              )}
-
-              {/* Order Total */}
+              {/* Product Total */}
               <View style={styles.orderTotalRow}>
                 <Text style={styles.orderTotalLabel}>TỔNG TIỀN</Text>
                 <View style={styles.orderTotalLine} />
                 <Text style={styles.orderTotalAmount}>
-                  {formatCurrency(calculateOrderTotal(order))}
+                  {formatCurrency(product.total)}
                 </Text>
               </View>
             </View>
@@ -605,7 +574,7 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
         {/* Summary Section */}
         <View style={styles.summarySection}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>TỔNG TIỀN DỊCH VỤ</Text>
+            <Text style={styles.summaryLabel}>TỔNG TIỀN SẢN PHẨM</Text>
             <Text style={styles.summaryValue2}>{formatCurrency(totalAmount)}</Text>
           </View>
           <View style={styles.summaryRow}>
@@ -620,30 +589,7 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
             <Text style={styles.summaryLabel2}>ĐÃ THANH TOÁN</Text>
             <Text style={styles.summaryValue}>{formatCurrency(paymentDiscount)}</Text>
           </View>
-          {orderTab.payment.length > 0 && (
-            orderTab.payment.length > 1 ?
-              <>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel2}>HÌNH THỨC T.TOÁN</Text>
-                  <Text style={styles.summaryValue}>TÍCH HỢP</Text>
-                </View>
 
-                {
-                  orderTab.payment.filter(p => Number(p.amount) > 0).map((payment, index) => (
-                    <View key={index} style={styles.summaryRow2}>
-                      <Text style={styles.summaryLabel3}>•{payment.paymentMethod === PAYMENT_METHOD.COD ? "TIỀN MẶT" : payment.paymentMethod === PAYMENT_METHOD.ONLINE ? "CHUYỂN KHOẢN" : "THẺ"}</Text>
-                      <Text style={styles.summaryValue}>{formatCurrency(Number(payment.amount))}</Text>
-                    </View>
-                  ))
-                }
-
-              </>
-              :
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel2}>HÌNH THỨC T.TOÁN</Text>
-                <Text style={styles.summaryValue}>{orderTab.payment[0].paymentMethod === PAYMENT_METHOD.COD ? "TIỀN MẶT" : orderTab.payment[0].paymentMethod === PAYMENT_METHOD.ONLINE ? "CHUYỂN KHOẢN" : "THẺ"}</Text>
-              </View>
-          )}
 
 
           <View style={styles.grandTotalRow}>
@@ -677,23 +623,22 @@ const InvoicePDF = ({ orderTab, advices, user }: { orderTab: OrderTab, advices: 
 
         {/* Notes */}
         <View style={styles.noteSection}>
-
-          {orderTab.note && (
+          {orderTab.customerInfo?.note && (
             <Text style={styles.noteText}>
-              Ghi chú đơn hàng: {orderTab.note}
+              Ghi chú đơn hàng: {orderTab.customerInfo.note}
             </Text>
           )}
           <Text style={styles.noteText}>
-            * Đơn hàng của quý khách sẽ dự kiến hoàn thành sau 17:00 vào ngày {dayjs(orderTab.proposedCompletionDate).format("DD/MM/YYYY")}
+            * Đơn hàng của quý khách sẽ được xử lý trong thời gian sớm nhất
           </Text>
           <Text style={styles.noteText}>
-            * Lưu ý: Trong trường hợp đơn hàng phát sinh thêm thời gian xử lí hoàn thiện sản phẩm, freshdrip sẽ chủ động liên hệ thông báo tới quý khách
+            * Lưu ý: Trong trường hợp đơn hàng phát sinh thêm thời gian xử lí hoàn thiện sản phẩm, Tea Shop sẽ chủ động liên hệ thông báo tới quý khách
           </Text>
           <Text style={styles.noteText}>
             * Giữ lại hóa đơn để đối chiếu khi nhận hàng
           </Text>
           <Text style={styles.noteText}>
-            **  Giao hàng tại địa chỉ {orderTab.deliveryMethod === DELIVERY_METHOD.STORE ? "cửa hàng" : orderTab.customerInfo?.address}
+            ** Giao hàng tại địa chỉ: {orderTab.customerInfo?.address || "Tại cửa hàng"}
           </Text>
         </View>
 
@@ -709,16 +654,16 @@ interface InvoicePDFGeneratorProps {
   orderTab: OrderTab
   onDownload?: () => void,
   setIsShowInvoice?: React.Dispatch<React.SetStateAction<boolean>>,
-  advices: AdviceResponse[]
-  user: any
+  companyAddress?: string[]
+  user?: any
 }
 
 export default function InvoicePDFGenerator({
   orderTab,
   onDownload,
   setIsShowInvoice,
-  advices,
-  user
+  companyAddress = ["Tea Shop", "123 Đường ABC, Quận XYZ"],
+  user = { companyBranch: { contact: "0123456789" } }
 }: InvoicePDFGeneratorProps) {
   const [isClient, setIsClient] = useState(false)
   const [url, setUrl] = useState<string | null>(null)
@@ -753,11 +698,11 @@ export default function InvoicePDFGenerator({
     }
   }, [url, printed])
 
-  if (!isClient || !orderTab?.orders?.length) return null
+  if (!isClient || !orderTab?.products?.length) return null
 
   return (
     <PDFDownloadLink
-      document={<InvoicePDF orderTab={orderTab} advices={advices} user={user} />}
+      document={<InvoicePDF orderTab={orderTab} companyAddress={companyAddress} user={user} />}
       fileName={`hoa-don-${orderTab?.name}.pdf`}
     >
       {({ loading, url }) => {

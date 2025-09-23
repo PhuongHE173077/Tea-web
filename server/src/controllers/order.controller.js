@@ -4,7 +4,7 @@ import { orderService } from "~/services/order.service"
 const createOrder = async (req, res, next) => {
     try {
         const { customer_info, cart_items, discount_code, shipping_address, payment_method } = req.body
-        
+
         // Get user ID from JWT token if available (for logged-in users)
         const userId = req.jwtDecoded?._id || req.jwtDecoded?.userId || null
 
@@ -67,7 +67,7 @@ const getOrderByTrackingNumber = async (req, res, next) => {
 const getUserOrders = async (req, res, next) => {
     try {
         const userId = req.jwtDecoded?._id || req.jwtDecoded?.userId
-        
+
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,
@@ -141,7 +141,7 @@ const getAllOrders = async (req, res, next) => {
 const getOrderStats = async (req, res, next) => {
     try {
         const userId = req.jwtDecoded?._id || req.jwtDecoded?.userId
-        
+
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 success: false,

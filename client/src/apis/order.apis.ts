@@ -68,11 +68,11 @@ export const getOrderByTrackingAPIs = async (trackingNumber: string) => {
 // Lấy danh sách đơn hàng của user hiện tại (protected)
 export const getUserOrdersAPIs = async (filters?: OrderFilters) => {
     const params = new URLSearchParams()
-    
+
     if (filters?.page) params.append('page', filters.page.toString())
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.status) params.append('status', filters.status)
-    
+
     const queryString = params.toString()
     return axiosCustomize.get(`/orders/my-orders${queryString ? `?${queryString}` : ''}`)
 }
@@ -90,7 +90,7 @@ export const getOrderStatsAPIs = async () => {
 // Admin APIs - Lấy tất cả đơn hàng (admin only)
 export const getAllOrdersAPIs = async (filters?: OrderFilters) => {
     const params = new URLSearchParams()
-    
+
     if (filters?.page) params.append('page', filters.page.toString())
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.status) params.append('status', filters.status)
@@ -99,7 +99,7 @@ export const getAllOrdersAPIs = async (filters?: OrderFilters) => {
     if (filters?.end_date) params.append('end_date', filters.end_date)
     if (filters?.sort_by) params.append('sort_by', filters.sort_by)
     if (filters?.sort_order) params.append('sort_order', filters.sort_order)
-    
+
     const queryString = params.toString()
     return axiosCustomize.get(`/orders${queryString ? `?${queryString}` : ''}`)
 }

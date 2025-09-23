@@ -166,3 +166,49 @@ export const PAYMENT_STATUS_COLORS = {
     failed: 'bg-red-100 text-red-800 border-red-200',
     refunded: 'bg-gray-100 text-gray-800 border-gray-200'
 } as const
+
+export interface OrderTab {
+    id: string
+    name: string
+    products: OrderProduct[]
+    customerInfo?: CustomerInfos
+    isActive: boolean
+}
+
+// Interface cho thuộc tính sản phẩm
+export interface ProductAttribute {
+    name: string
+    unit: string
+    price: number
+    image?: string
+}
+
+// Interface cho thuộc tính đã chọn trong đơn hàng
+export interface SelectedProductAttribute {
+    name: string
+    unit: string
+    price: number
+    image?: string
+}
+
+// Interface cho sản phẩm trong đơn hàng
+export interface OrderProduct {
+    _id: string
+    product_name: string
+    product_thumb: string
+    product_basePrice: number
+    selectedAttributes?: SelectedProductAttribute[]
+    quantity: number
+    price: number // Giá cuối cùng sau khi tính thuộc tính
+    total: number
+    attributeDisplayName?: string // Tên hiển thị của thuộc tính đã chọn
+}
+
+// Interface cho thông tin khách hàng
+export interface CustomerInfos {
+    name: string
+    phone: string
+    email: string
+    address: string
+    note?: string
+}
