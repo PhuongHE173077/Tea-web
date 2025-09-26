@@ -537,7 +537,7 @@ const InvoicePDF = ({ orderTab, companyAddress, user }: {
               {/* Product Title */}
               <Text style={styles.productTitle}>
                 {index + 1}. {product.product_name.toUpperCase()}
-                {product.attributeDisplayName && ` | ${product.attributeDisplayName}`}
+                {product.attributeDisplayName && ` | ${product.selectedAttributes[0].name === "package" ? "Túi" : "Hộp"} (${product.selectedAttributes[0].unit})`}
               </Text>
 
               {/* Product Details */}

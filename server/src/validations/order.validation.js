@@ -291,9 +291,9 @@ const trackOrder = async (req, res, next) => {
                     'string.pattern.base': 'Phone number must be 10-11 digits'
                 })
         }).or('trackingNumber', 'phone')
-        .messages({
-            'object.missing': 'Either tracking number or phone number is required'
-        })
+            .messages({
+                'object.missing': 'Either tracking number or phone number is required'
+            })
 
         await schema.validateAsync(req.body, { abortEarly: false })
         next()
@@ -351,6 +351,7 @@ const getCustomers = async (req, res, next) => {
         next(new ApiError(StatusCodes.BAD_REQUEST, error.message))
     }
 }
+
 
 export const orderValidation = {
     createOrder,

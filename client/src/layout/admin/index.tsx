@@ -67,7 +67,7 @@ export default function DashboardLayout() {
                         </Breadcrumb>
                         <Bell className="mr-5 ml-auto" size={20} />
                     </header>
-                    <TabLayout className="flex flex-1 flex-col" />
+                    <Outlet />
                 </SidebarInset>
             </SidebarProvider>
         </TabProvider>

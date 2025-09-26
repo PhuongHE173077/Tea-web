@@ -500,6 +500,21 @@ const getCustomers = async (filters = {}) => {
     }
 }
 
+const createOrderByAdmin = async (orderData) => {
+    try {
+        const trackingNumber = await Order.generateTrackingNumber()
+        const newData = {
+            ...orderData,
+            order_trackingNumber: trackingNumber
+        }
+        const order = await Order.create(newData)
+        return order
+    } catch (error) {
+        console.error('Create order by admin error:', error)
+        throw error
+    }
+}
+
 export const orderService = {
     createOrder,
     getOrderById,
@@ -508,5 +523,6 @@ export const orderService = {
     updateOrderStatus,
     getAllOrders,
     trackOrder,
-    getCustomers
+    getCustomers,
+    createOrderByAdmin
 }

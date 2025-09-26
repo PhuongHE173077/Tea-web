@@ -1,3 +1,5 @@
+// ...existing code...
+const orderTabs = JSON.parse(localStorage.getItem('orderTabs') || '[]')
 import React, { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +16,23 @@ interface CustomerInfo {
     email: string
     address: string
     note?: string
+    // Thông tin địa chỉ chi tiết
+    order_shipping?: {
+        province: {
+            code: string
+            name: string
+        }
+        district: {
+            code: string
+            name: string
+        }
+        ward: {
+            code: string
+            name: string
+        }
+        street: string // Số nhà, tên đường cụ thể
+        full_address: string // Địa chỉ đầy đủ đã format
+    }
 }
 
 interface CustomerInfoProps {
@@ -35,11 +54,31 @@ export default function CustomerInfo({
         note: ''
     }
 
-    const currentInfo = customerInfo || defaultCustomerInfo
+    const currentInfo = customerInfo ? customerInfo : defaultCustomerInfo
 
     // State cho dialog cập nhật thông tin
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false)
     const [updateForm, setUpdateForm] = useState(currentInfo)
+
+    // Cập nhật form khi customerInfo thay đổi
+    useEffect(() => {
+        setUpdateForm(currentInfo)
+    }, [customerInfo])
+
+    // Load thông tin khách hàng từ localStorage khi component mount
+    useEffect(() => {
+        const savedCustomerInfo = localStorage.getItem('customer_info')
+        if (savedCustomerInfo) {
+            try {
+                const customerData = JSON.parse(savedCustomerInfo)
+                onCustomerInfoChange({
+                    ...customerData
+                })
+            } catch (error) {
+                console.error('Error loading saved customer info on mount:', error)
+            }
+        }
+    }, [])
 
     // State cho dialog địa chỉ
     const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
@@ -53,6 +92,7 @@ export default function CustomerInfo({
     const [isLoadingProvinces, setIsLoadingProvinces] = useState(false)
     const [isLoadingDistricts, setIsLoadingDistricts] = useState(false)
     const [isLoadingWards, setIsLoadingWards] = useState(false)
+    const [activeTab, setActiveTab] = useState()
 
     // Load provinces từ API
     useEffect(() => {
@@ -136,42 +176,155 @@ export default function CustomerInfo({
         loadWards()
     }, [selectedDistrict])
 
+    // Load thông tin khách hàng từ localStorage khi mở dialog cập nhật
+    const loadCustomerInfoToDialog = () => {
+        const orderTabs = JSON.parse(localStorage.getItem('orderTabs') || '[]')
+        const savedCustomerInfo = orderTabs.find(tab => tab.isActive)?.customerInfo
+        if (savedCustomerInfo) {
+            try {
+                const customerData = JSON.parse(savedCustomerInfo)
+                setUpdateForm({
+                    ...currentInfo,
+                    ...customerData
+                })
+            } catch (error) {
+                console.error('Error loading saved customer info:', error)
+                setUpdateForm(currentInfo)
+            }
+        } else {
+            setUpdateForm(currentInfo)
+        }
+    }
+
     const handleUpdateSubmit = () => {
+        // Lưu thông tin vào localStorage
+
+
         onCustomerInfoChange(updateForm)
         setIsUpdateDialogOpen(false)
+
+
+        toast({
+            title: "Thành công",
+            description: "Đã cập nhật thông tin khách hàng"
+        })
+    }
+
+    // Load địa chỉ đã lưu khi mở dialog
+    const loadSavedAddressToDialog = async () => {
+        console.log('Loading saved address to dialog...')
+
+        // Ưu tiên load từ thông tin hiện tại trước
+        let addressData = null
+
+        // Kiểm tra xem có thông tin địa chỉ trong customerInfo hiện tại không
+        if (currentInfo.order_shipping) {
+            console.log('Loading from current customer info:', currentInfo.order_shipping)
+            addressData = currentInfo.order_shipping
+        } else {
+            // Nếu không có, load từ localStorage
+            const savedAddress = localStorage.getItem('customer_shipping_address')
+            console.log('Saved address from localStorage:', savedAddress)
+
+            if (savedAddress) {
+                try {
+                    addressData = JSON.parse(savedAddress)
+                    console.log('Parsed address data:', addressData)
+                } catch (error) {
+                    console.error('Error parsing saved address:', error)
+                }
+            }
+        }
+
+        if (addressData) {
+            setSelectedProvince(addressData.province?.code || '')
+            setDetailAddress(addressData.street || '')
+
+            // Load districts nếu có province
+            if (addressData.province?.code) {
+                console.log('Loading districts for province:', addressData.province.code)
+                setIsLoadingDistricts(true)
+                try {
+                    const districtsData = await AddressService.getDistrictsByProvinceCode(addressData.province.code)
+                    console.log('Districts loaded:', districtsData.length)
+                    setDistricts(districtsData)
+                    setSelectedDistrict(addressData.district?.code || '')
+
+                    // Load wards nếu có district
+                    if (addressData.district?.code) {
+                        console.log('Loading wards for district:', addressData.district.code)
+                        setIsLoadingWards(true)
+                        const wardsData = await AddressService.getWardsByDistrictCode(addressData.district.code)
+                        console.log('Wards loaded:', wardsData.length)
+                        setWards(wardsData)
+                        setSelectedWard(addressData.ward?.code || '')
+                        setIsLoadingWards(false)
+                    }
+                } catch (error) {
+                    console.error('Error loading districts/wards:', error)
+                } finally {
+                    setIsLoadingDistricts(false)
+                }
+            }
+        } else {
+            console.log('No saved address found')
+            // Reset form nếu không có dữ liệu
+            setSelectedProvince('')
+            setSelectedDistrict('')
+            setSelectedWard('')
+            setDetailAddress('')
+            setDistricts([])
+            setWards([])
+        }
     }
 
     const handleAddressSubmit = () => {
+
         // Validate địa chỉ
         const provinceName = provinces.find(p => p.code === selectedProvince)?.name || ''
         const districtName = districts.find(d => d.code === selectedDistrict)?.name || ''
         const wardName = wards.find(w => w.code === selectedWard)?.name || ''
 
-        const validation = AddressService.validateAddress(provinceName, districtName, wardName, detailAddress)
 
-        if (!validation.isValid) {
-            toast({
-                title: "Lỗi",
-                description: validation.errors.join(', '),
-                variant: "destructive"
-            })
-            return
-        }
 
         const fullAddress = AddressService.formatFullAddress(provinceName, districtName, wardName, detailAddress)
 
-        onCustomerInfoChange({
-            ...currentInfo,
-            address: fullAddress
-        })
-        setIsAddressDialogOpen(false)
+        const orderShipping = {
+            province: {
+                code: selectedProvince,
+                name: provinceName
+            },
+            district: {
+                code: selectedDistrict,
+                name: districtName
+            },
+            ward: {
+                code: selectedWard,
+                name: wardName
+            },
+            street: detailAddress,
+            full_address: fullAddress
+        }
 
-        // Reset form
+        // Cập nhật thông tin khách hàng với địa chỉ chi tiết
+        const updatedCustomerInfo = {
+            ...currentInfo,
+            address: fullAddress,
+            order_shipping: orderShipping
+        }
+
+
+
+        const orderTabs = JSON.parse(localStorage.getItem('orderTabs') || '[]')
+        const activeOrder = orderTabs.find((order: any) => order.isActive)
+        activeOrder.customerInfo = updatedCustomerInfo
+        onCustomerInfoChange(updatedCustomerInfo)
+        localStorage.setItem('orderTabs', JSON.stringify(orderTabs))
+        setIsAddressDialogOpen(false)
         setSelectedProvince('')
         setSelectedDistrict('')
         setSelectedWard('')
         setDetailAddress('')
-
         toast({
             title: "Thành công",
             description: "Đã cập nhật địa chỉ khách hàng"
@@ -205,6 +358,7 @@ export default function CustomerInfo({
                         <span className="w-24 text-sm font-bold">Địa chỉ:</span>
                         <span className="text-sm font-bold">{currentInfo.address || '(Chưa khai báo)'}</span>
                     </div>
+
                 </div>
 
                 {/* Các nút hành động */}
@@ -212,7 +366,12 @@ export default function CustomerInfo({
                     {/* Nút Cập nhật */}
                     <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="secondary" size="sm" className="bg-gray-500 w-[120px] hover:bg-gray-600 text-white">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="bg-gray-500 w-[120px] hover:bg-gray-600 text-white"
+                                onClick={loadCustomerInfoToDialog}
+                            >
                                 Cập nhật
                             </Button>
                         </DialogTrigger>
@@ -266,7 +425,15 @@ export default function CustomerInfo({
                     {/* Nút Địa chỉ */}
                     <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="default" size="sm" className="bg-blue-500 w-[120px] hover:bg-blue-600 text-white">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-blue-500 w-[120px] hover:bg-blue-600 text-white"
+                                onClick={() => {
+                                    console.log('Address button clicked')
+                                    loadSavedAddressToDialog()
+                                }}
+                            >
                                 Địa chỉ
                             </Button>
                         </DialogTrigger>
@@ -340,6 +507,20 @@ export default function CustomerInfo({
                                 </div>
                             </div>
                             <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setSelectedProvince('')
+                                        setSelectedDistrict('')
+                                        setSelectedWard('')
+                                        setDetailAddress('')
+                                        setDistricts([])
+                                        setWards([])
+                                    }}
+                                >
+                                    Reset
+                                </Button>
                                 <Button type="submit" onClick={handleAddressSubmit}>
                                     Lưu địa chỉ
                                 </Button>

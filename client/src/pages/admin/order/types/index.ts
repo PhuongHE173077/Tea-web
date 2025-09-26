@@ -147,8 +147,8 @@ export const ORDER_STATUS_COLORS = {
 
 // Constants cho phương thức thanh toán
 export const PAYMENT_METHOD_LABELS = {
-    cod: 'Thanh toán khi nhận hàng',
-    bank_transfer: 'Chuyển khoản ngân hàng',
+    cod: 'COD',
+    bank_transfer: 'Chuyển khoản',
     momo: 'Ví MoMo',
     vnpay: 'VNPay'
 } as const
@@ -172,6 +172,11 @@ export interface OrderTab {
     name: string
     products: OrderProduct[]
     customerInfo?: CustomerInfos
+    paymentInfo?: {
+        method: 'cod' | 'bank_transfer' | 'momo' | 'vnpay'
+        status: 'pending' | 'paid' | 'failed' | 'refunded'
+    }
+    discountAmount?: number
     isActive: boolean
 }
 
@@ -211,4 +216,21 @@ export interface CustomerInfos {
     email: string
     address: string
     note?: string
+    // Thông tin địa chỉ chi tiết
+    order_shipping?: {
+        province: {
+            code: string
+            name: string
+        }
+        district: {
+            code: string
+            name: string
+        }
+        ward: {
+            code: string
+            name: string
+        }
+        street: string // Số nhà, tên đường cụ thể
+        full_address: string // Địa chỉ đầy đủ đã format
+    }
 }

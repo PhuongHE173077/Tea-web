@@ -172,3 +172,7 @@ export interface OrderTrackingResponse {
 export const trackOrderAPIs = async (data: OrderTrackingRequest) => {
     return axiosCustomize.post<OrderTrackingResponse>('/orders/track', data)
 }
+
+export const createOrderByAdminAPIs = async (orderData: any) => {
+    return axiosCustomize.post("/orders/admin", orderData)
+}

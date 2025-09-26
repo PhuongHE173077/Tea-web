@@ -214,7 +214,6 @@ const trackOrder = async (req, res, next) => {
             // Multiple orders (phone search)
             const formattedOrders = result.orders.map(formatOrderData)
 
-            console.log('🔍 Track Order - Found multiple orders:', result.orders.length)
 
             res.status(StatusCodes.OK).json({
                 success: true,
@@ -229,7 +228,6 @@ const trackOrder = async (req, res, next) => {
             // Single order (tracking number search)
             const formattedOrder = formatOrderData(result.order)
 
-            console.log('🔍 Track Order - Found single order:', result.order._id)
 
             res.status(StatusCodes.OK).json({
                 success: true,
@@ -248,7 +246,6 @@ const trackOrder = async (req, res, next) => {
 // Admin API - Get customers list with spending statistics
 const getCustomers = async (req, res, next) => {
     try {
-        console.log('🔍 Get Customers Controller - Query params:', req.query)
 
         const filters = {
             page: parseInt(req.query.page) || 1,
@@ -258,14 +255,8 @@ const getCustomers = async (req, res, next) => {
             sort_order: req.query.sort_order || 'desc'
         }
 
-        console.log('🔍 Get Customers Controller - Filters:', filters)
 
         const result = await orderService.getCustomers(filters)
-
-        console.log('🔍 Get Customers Controller - Result:', {
-            customersCount: result.customers.length,
-            pagination: result.pagination
-        })
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -279,6 +270,15 @@ const getCustomers = async (req, res, next) => {
     }
 }
 
+const createOrderByAdmin = async (req, res, next) => {
+    try {
+        const newOrder = await orderService.createOrderByAdmin(req.body)
+        res.status(StatusCodes.CREATED).json(newOrder)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const orderController = {
     createOrder,
     getOrderById,
@@ -288,5 +288,6 @@ export const orderController = {
     getAllOrders,
     getOrderStats,
     trackOrder,
-    getCustomers
+    getCustomers,
+    createOrderByAdmin
 }

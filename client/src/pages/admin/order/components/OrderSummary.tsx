@@ -10,27 +10,32 @@ import { CreditCard, Truck, CheckCircle, Clock, XCircle, FileText } from 'lucide
 import { OrderProduct, OrderTab } from '../types'
 import InputNumber from '@/components/InputNumber'
 import InvoicePDFGenerator from './invoice-pdf-generator'
+import { ShipConfig } from '@/types/ship'
 
 interface OrderSummaryProps {
     products: OrderProduct[]
     onCreateOrder: () => void
     orderTab?: OrderTab
+    setTabs: React.Dispatch<React.SetStateAction<OrderTab[]>>,
+    shipping: ShipConfig
 }
 
 export default function OrderSummary({
     products,
     onCreateOrder,
-    orderTab
+    orderTab,
+    shipping,
+    setTabs
 }: OrderSummaryProps) {
-    const [discountAmount, setDiscountAmount] = useState(0)
-    const [shippingFee, setShippingFee] = useState(30000) // Phí ship mặc định 30k
+    console.log("🚀 ~ OrderSummary ~ shipping:", shipping)
     const [paymentMethod, setPaymentMethod] = useState<string>('cod') // Mặc định chọn COD
-    const [paymentStatus, setPaymentStatus] = useState('pending')
     const [showInvoice, setShowInvoice] = useState(false)
 
     // Tính toán tổng tiền
     const subtotal = products.reduce((sum, product) => sum + product.total, 0)
-    const total = subtotal - discountAmount + shippingFee
+    const shippingFee = subtotal >= shipping.freeShippingThreshold ? 0 : shipping.shippingFee
+
+    const total = subtotal - orderTab?.discountAmount + shippingFee
 
     // Format giá tiền
     const formatPrice = (price: number) => {
@@ -40,51 +45,20 @@ export default function OrderSummary({
         }).format(price)
     }
 
-    // Xử lý thay đổi số tiền giảm giá
-    const handleDiscountAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = parseFloat(e.target.value) || 0
-        setDiscountAmount(value)
-    }
-
-    // Xử lý thay đổi phương thức thanh toán (chỉ chọn 1)
-    const handlePaymentMethodChange = (method: string, checked: boolean) => {
-        if (checked) {
-            setPaymentMethod(method) // Chỉ set method được chọn
-        } else {
-            setPaymentMethod('') // Bỏ chọn tất cả
-        }
-    }
-
-    // Lấy icon cho trạng thái thanh toán
-    const getPaymentStatusIcon = (status: string) => {
-        switch (status) {
-            case 'paid':
-                return <CheckCircle className="h-4 w-4 text-green-500" />
-            case 'pending':
-                return <Clock className="h-4 w-4 text-yellow-500" />
-            case 'failed':
-                return <XCircle className="h-4 w-4 text-red-500" />
-            default:
-                return <Clock className="h-4 w-4 text-gray-500" />
-        }
-    }
-
-    // Lấy text cho trạng thái thanh toán
-    const getPaymentStatusText = (status: string) => {
-        switch (status) {
-            case 'paid':
-                return 'Đã thanh toán'
-            case 'pending':
-                return 'Chờ thanh toán'
-            case 'failed':
-                return 'Thanh toán thất bại'
-            default:
-                return 'Chờ thanh toán'
-        }
-    }
-
     // Kiểm tra có thể tạo đơn hàng không
     const canCreateOrder = products.length > 0
+
+    const handleDiscountChange = (e: any) => {
+        const discountAmount = e;
+        setTabs((prevTabs) =>
+            prevTabs.map((tab) => {
+                if (tab.id === orderTab?.id) {
+                    return { ...tab, discountAmount };
+                }
+                return tab;
+            })
+        );
+    }
 
     return (
         <div className="flex flex-col h-full order-summary-sticky">
@@ -103,10 +77,15 @@ export default function OrderSummary({
                             <span>{formatPrice(subtotal)}</span>
                         </div>
 
+                        <div className="flex justify-between items-center text-sm">
+                            <span>Giảm giá:</span>
+                            <span className='w-[90px]'><InputNumber className='h-7' value={orderTab?.discountAmount || 0} onChange={(e) => handleDiscountChange(e)} /></span>
+                        </div>
+
 
                         <div className="flex justify-between text-sm">
                             <span>Phí vận chuyển:</span>
-                            <span>{formatPrice(shippingFee)}</span>
+                            <span>{shippingFee}</span>
                         </div>
 
                         <Separator />
@@ -121,7 +100,25 @@ export default function OrderSummary({
                     <div>
                         <Label htmlFor="payment-status">Trạng thái thanh toán</Label>
                         <div className="flex gap-2 mt-1">
-                            <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                            <Select
+                                value={orderTab.paymentInfo?.status}
+                                onValueChange={(value) => {
+                                    setTabs((prevTabs) =>
+                                        prevTabs.map((tab) => {
+                                            if (tab.id === orderTab?.id) {
+                                                return {
+                                                    ...tab,
+                                                    paymentInfo: {
+                                                        ...tab.paymentInfo,
+                                                        status: value as 'pending' | 'paid' | 'failed' | 'refunded',
+                                                    },
+                                                };
+                                            }
+                                            return tab;
+                                        })
+                                    );
+                                }}
+                            >
                                 <SelectTrigger className="flex-1">
                                     <SelectValue placeholder="Chọn trạng thái thanh toán" />
                                 </SelectTrigger>
@@ -162,18 +159,7 @@ export default function OrderSummary({
                     {canCreateOrder ? 'Tạo đơn hàng' : 'Chọn sản phẩm để tiếp tục'}
                 </Button>
 
-                {/* Nút xem hóa đơn */}
-                {orderTab && orderTab.products.length > 0 && (
-                    <Button
-                        onClick={() => setShowInvoice(true)}
-                        variant="outline"
-                        className="w-full"
-                        size="sm"
-                    >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Xem hóa đơn
-                    </Button>
-                )}
+
             </div>
 
             {/* Invoice PDF Generator */}

@@ -9,9 +9,13 @@ import CustomerInfo from './components/CustomerInfo'
 import ProductTable from './components/ProductTable'
 import ProductSearchDropdown from './components/ProductSearchDropdown'
 import ProductAttributeDialog from './components/ProductAttributeDialog'
+import InvoicePDFGenerator from './components/invoice-pdf-generator'
 import { useProductSearch } from '@/hooks/useProductSearch'
 import { OrderProduct, OrderTab, SelectedProductAttribute } from './types'
-import { createOrderAPIs } from '@/apis/order.apis'
+import { createOrderAPIs, createOrderByAdminAPIs } from '@/apis/order.apis'
+import shipService, { getShipConfigs } from '@/services/ship.service'
+import { ShipConfig } from '@/types/ship'
+import { toast } from 'react-toastify'
 
 // Interface cho tab đơn hàng
 
@@ -22,16 +26,22 @@ export default function CreateOrder() {
             id: '1',
             name: 'Đơn hàng #1',
             products: [],
+            discountAmount: 0,
             isActive: true
         }
     ])
     const [activeTab, setActiveTab] = useState('1')
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchDropdownVisible, setIsSearchDropdownVisible] = useState(false)
+    const [shipping, setShipping] = useState<ShipConfig | null>(null)
 
     // State cho dialog chọn thuộc tính
     const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false)
     const [selectedProductForAttributes, setSelectedProductForAttributes] = useState<Product | null>(null)
+
+    // State cho in hóa đơn
+    const [showInvoiceForPrint, setShowInvoiceForPrint] = useState(false)
+    const [orderTabForPrint, setOrderTabForPrint] = useState<OrderTab | null>(null)
 
     // Refs
     const searchInputRef = useRef<HTMLInputElement>(null)
@@ -57,8 +67,17 @@ export default function CreateOrder() {
                 setActiveTab(activeTabData.id)
             }
         }
+        fetchDataShip()
     }, [])
 
+    const fetchDataShip = async () => {
+        try {
+            const shipData = await shipService.getShipConfigs()
+            setShipping(shipData.data[0])
+        } catch (error) {
+            console.error('Error fetching ship configs:', error)
+        }
+    }
     // Lưu tabs vào localStorage mỗi khi tabs thay đổi
     useEffect(() => {
         localStorage.setItem('orderTabs', JSON.stringify(tabs))
@@ -86,10 +105,45 @@ export default function CreateOrder() {
     // Tạo tab mới
     const createNewTab = () => {
         const newTabId = Date.now().toString()
+
+        // Load thông tin đã lưu từ localStorage
+        const savedShippingAddress = localStorage.getItem('customer_shipping_address')
+        const savedPaymentMethod = localStorage.getItem('order_payment_method')
+        const savedPaymentStatus = localStorage.getItem('order_payment_status')
+
+        let customerInfo = undefined
+        let paymentInfo = undefined
+
+        if (savedShippingAddress) {
+            try {
+                const shippingData = JSON.parse(savedShippingAddress)
+                customerInfo = {
+                    name: '',
+                    phone: '',
+                    email: '',
+                    address: shippingData.full_address || '',
+                    note: '',
+                    order_shipping: shippingData
+                }
+            } catch (error) {
+                console.error('Error loading saved shipping address:', error)
+            }
+        }
+
+        if (savedPaymentMethod || savedPaymentStatus) {
+            paymentInfo = {
+                method: (savedPaymentMethod as any) || 'cod',
+                status: (savedPaymentStatus as any) || 'pending'
+            }
+        }
+
         const newTab: OrderTab = {
             id: newTabId,
             name: `Đơn hàng #${tabs.length + 1}`,
             products: [],
+            customerInfo,
+            paymentInfo,
+            discountAmount: 0,
             isActive: false
         }
 
@@ -248,16 +302,96 @@ export default function CreateOrder() {
     // Lấy tab hiện tại
     const currentTab = tabs.find(tab => tab.id === activeTab)
 
-    // const createOrder = async () => {
-    //     const dataAddOrder = {
-    //         customer_info: currentTab?.customerInfo,
-    //         cart_items: currentTab?.products,
-    //         discount_code: '',
-    //         shipping_address: currentTab?.customerInfo?.address,
-    //         payment_method: 'cod'
-    //     }
-    //     await createOrderAPIs(dataAddOrder)
-    // }
+    const createOrder = async () => {
+        try {
+            const subtotal = currentTab?.products.reduce((sum, product) => sum + product.total, 0) || 0
+            const shipping_fee = subtotal > +shipping?.formattedFreeShippingThreshold ? 0 : +shipping?.shippingFee
+
+            let orderShipping = {}
+
+            if (!currentTab?.customerInfo?.name || !currentTab?.customerInfo?.phone || !currentTab?.customerInfo?.email) {
+                toast.error("Chưa có thông tin khách hàng!")
+                return
+            }
+
+            // Lấy thông tin thanh toán từ currentTab hoặc mặc định
+            const paymentMethod = currentTab?.paymentInfo?.method || 'cod'
+            const paymentStatus = currentTab?.paymentInfo?.status || 'pending'
+
+            const createData = {
+                order_customer: {
+                    name: currentTab?.customerInfo?.name || '',
+                    phone: currentTab?.customerInfo?.phone || '',
+                    email: currentTab?.customerInfo?.email || '',
+                    address: currentTab?.customerInfo?.address || '',
+                    note: currentTab?.customerInfo?.note || ''
+                },
+                order_checkout: {
+                    subtotal: subtotal,
+                    discount_amount: currentTab?.discountAmount || 0,
+                    shipping_fee: shipping_fee,
+                    total: subtotal - (currentTab?.discountAmount || 0) + shipping_fee
+                },
+                order_shipping: orderShipping,
+                order_payment: {
+                    method: paymentStatus === "pending" ? "cod" : "bank_transfer",
+                    status: paymentStatus
+                },
+                order_products: currentTab?.products.map(product => ({
+                    product_id: product._id,
+                    product_name: product.product_name,
+                    product_slug: product.product_name,
+                    product_image: product.product_thumb,
+                    product_price: product.price,
+                    quantity: product.quantity,
+                    total_price: product.total,
+                    product_attribute: product.selectedAttributes ? {
+                        name: product.selectedAttributes[0].name,
+                        unit: product.selectedAttributes[0].unit,
+                        price: product.selectedAttributes[0].price
+                    } : {}
+                }))
+            }
+
+            // Gọi API tạo đơn hàng
+            const data: any = await createOrderByAdminAPIs(createData)
+
+            // Hiển thị thông báo thành công
+            toast.success("Tạo đơn hàng thành công !")
+
+            // Sau khi tạo đơn hàng thành công, kích hoạt in hóa đơn
+            if (currentTab) {
+                setOrderTabForPrint(currentTab)
+                setShowInvoiceForPrint(true)
+            }
+
+        } catch (error) {
+            console.error('Error creating order:', error)
+            toast.error("Có lỗi xảy ra khi tạo đơn hàng!")
+        }
+    }
+
+    // Hàm xử lý sau khi in hóa đơn thành công
+    const handlePrintSuccess = () => {
+        setShowInvoiceForPrint(false)
+        setOrderTabForPrint(null)
+
+        // Đóng tab hiện tại sau khi in thành công
+        if (tabs.length > 1) {
+            closeTab(activeTab)
+        } else {
+            // Nếu chỉ có 1 tab, reset tab về trạng thái ban đầu
+            const resetTab: OrderTab = {
+                id: '1',
+                name: 'Đơn hàng #1',
+                products: [],
+                discountAmount: 0,
+                isActive: true
+            }
+            setTabs([resetTab])
+            setActiveTab('1')
+        }
+    }
 
     return (
         <div className="h-screen flex flex-col bg-green-50">
@@ -374,11 +508,13 @@ export default function CreateOrder() {
                                     setTabs(updatedTabs)
                                 }}
                             />
-                            <OrderSummary
+                            {shipping && <OrderSummary
                                 products={currentTab.products}
-                                onCreateOrder={() => { }}
+                                onCreateOrder={createOrder}
+                                setTabs={setTabs}
+                                shipping={shipping}
                                 orderTab={currentTab}
-                            />
+                            />}
 
                         </>
                     )}
@@ -392,6 +528,15 @@ export default function CreateOrder() {
                     onClose={handleAttributeDialogClose}
                     product={selectedProductForAttributes}
                     onConfirm={handleAttributeConfirm}
+                />
+            )}
+
+            {/* Invoice PDF Generator cho in hóa đơn tự động */}
+            {showInvoiceForPrint && orderTabForPrint && (
+                <InvoicePDFGenerator
+                    orderTab={orderTabForPrint}
+                    onDownload={handlePrintSuccess}
+                    setIsShowInvoice={setShowInvoiceForPrint}
                 />
             )}
         </div>

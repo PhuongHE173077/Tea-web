@@ -19,6 +19,12 @@ router.post('/',
     orderController.createOrder
 )
 
+
+router.post('/admin',
+    authMiddlewares.isAuthorized,
+    orderController.createOrderByAdmin
+)
+
 /**
  * @route GET /api/v1/orders/tracking/:tracking_number
  * @desc Tra cứu đơn hàng theo mã tracking (public)
