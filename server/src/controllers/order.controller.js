@@ -279,12 +279,32 @@ const createOrderByAdmin = async (req, res, next) => {
     }
 }
 
+const updatePaymentStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params
+        const { status, payment_status } = req.body
+        const updatedBy = req.jwtDecoded?._id || req.jwtDecoded?.userId
+
+        const newStatus = payment_status || status
+        const updatedOrder = await orderService.updatePaymentStatus(id, newStatus, updatedBy)
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Payment status updated successfully',
+            data: updatedOrder
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const orderController = {
     createOrder,
     getOrderById,
     getOrderByTrackingNumber,
     getUserOrders,
     updateOrderStatus,
+    updatePaymentStatus,
     getAllOrders,
     getOrderStats,
     trackOrder,

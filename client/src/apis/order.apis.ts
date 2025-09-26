@@ -112,6 +112,12 @@ export const updateOrderStatusAPIs = async (orderId: string, status: string, not
     })
 }
 
+// Admin APIs - Cập nhật trạng thái thanh toán (admin only)
+export const updatePaymentStatusAPIs = async (orderId: string, status: string) => {
+    return axiosCustomize.put(`/orders/${orderId}/payment-status`, { status })
+}
+
+
 // Public APIs - Tra cứu đơn hàng (không cần đăng nhập)
 export interface OrderTrackingRequest {
     trackingNumber?: string

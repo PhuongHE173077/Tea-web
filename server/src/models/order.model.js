@@ -15,6 +15,7 @@ const ORDER_STATUS = {
 const PAYMENT_STATUS = {
     PENDING: 'pending',
     PAID: 'paid',
+    PARTIAL: 'partial',
     FAILED: 'failed',
     REFUNDED: 'refunded'
 }
@@ -155,6 +156,17 @@ const orderSchema = new Schema({
             required: true
         },
         note: { type: String, default: '' },
+        updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+        updated_at: { type: Date, default: Date.now }
+    }],
+
+    // Payment status history
+    payment_history: [{
+        status: {
+            type: String,
+            enum: Object.values(PAYMENT_STATUS),
+            required: true
+        },
         updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
         updated_at: { type: Date, default: Date.now }
     }],

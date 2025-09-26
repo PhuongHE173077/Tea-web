@@ -1,6 +1,6 @@
 "use client"
 
-import { getAllOrdersAPIs, updateOrderStatusAPIs } from "@/apis/order.apis"
+import { getAllOrdersAPIs, updateOrderStatusAPIs, updatePaymentStatusAPIs } from "@/apis/order.apis"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -60,7 +60,8 @@ import {
     ORDER_STATUS_COLORS,
     PAYMENT_METHOD_LABELS,
     PAYMENT_STATUS_COLORS,
-    ORDER_STATUS
+    ORDER_STATUS,
+    PAYMENT_STATUS_LABELS
 } from "./types"
 
 export default function OrderManagement() {
@@ -77,6 +78,11 @@ export default function OrderManagement() {
     const [totalOrders, setTotalOrders] = useState(0)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [confirmLoading, setConfirmLoading] = useState(false)
+
+    const [pendingChange, setPendingChange] = useState<null | { orderId: string; fromStatus: string; toStatus: string }>(null)
 
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -228,8 +234,99 @@ export default function OrderManagement() {
                 text: errorMessage,
                 icon: "error"
             })
+            // Cho phép caller xử lý tiếp nếu cần
+            throw error
         }
     }
+    const openConfirmChange = (order: Order, toStatus: string) => {
+        setPendingChange({ orderId: order._id, fromStatus: order.order_status, toStatus })
+
+        setConfirmOpen(true)
+    }
+
+    const confirmStatusChange = async () => {
+        if (!pendingChange) return
+        setConfirmLoading(true)
+        try {
+            await handleStatusUpdate(pendingChange.orderId, pendingChange.toStatus)
+        } catch (e) {
+        } finally {
+            setConfirmLoading(false)
+            setConfirmOpen(false)
+            setPendingChange(null)
+
+        }
+
+
+        }
+
+
+
+        // Xác nhận thay đổi trạng thái thanh toán
+        const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false)
+        const [confirmPaymentLoading, setConfirmPaymentLoading] = useState(false)
+        const [pendingPaymentChange, setPendingPaymentChange] = useState<null | { orderId: string; fromStatus: string; toStatus: string }>(null)
+
+        const handlePaymentStatusUpdate = async (orderId: string, newStatus: string) => {
+            try {
+                await updatePaymentStatusAPIs(orderId, newStatus)
+
+                // Cập nhật state local
+                setOrders(prev => prev.map(order =>
+                    order._id === orderId
+                        ? {
+                            ...order,
+                            order_payment: {
+                                ...(order.order_payment || { method: 'cod', status: 'pending' as any }),
+                                status: newStatus as any
+                            }
+                        }
+                        : order
+                ))
+
+                // Cập nhật selectedOrder nếu đang xem modal
+                if (selectedOrder && selectedOrder._id === orderId) {
+                    setSelectedOrder(prev => prev ? {
+                        ...prev,
+                        order_payment: {
+                            ...(prev.order_payment || { method: 'cod', status: 'pending' as any }),
+                            status: newStatus as any
+                        }
+                    } : null)
+                }
+
+                Swal.fire({
+                    title: "Thành công!",
+                    text: "Cập nhật trạng thái thanh toán thành công",
+                    icon: "success",
+                    timer: 2000
+                })
+            } catch (error: any) {
+                const errorMessage = error.response?.data?.message || error.message || "Không thể cập nhật trạng thái thanh toán"
+                Swal.fire({ title: "Lỗi!", text: errorMessage, icon: "error" })
+                throw error
+            }
+        }
+
+        const openConfirmPaymentChange = (order: Order, toStatus: string) => {
+            const fromStatus = order.order_payment?.status || 'pending'
+            setPendingPaymentChange({ orderId: order._id, fromStatus, toStatus })
+            setConfirmPaymentOpen(true)
+        }
+
+        const confirmPaymentStatusChange = async () => {
+            if (!pendingPaymentChange) return
+            setConfirmPaymentLoading(true)
+            try {
+                await handlePaymentStatusUpdate(pendingPaymentChange.orderId, pendingPaymentChange.toStatus)
+            } catch (e) {
+            } finally {
+                setConfirmPaymentLoading(false)
+                setConfirmPaymentOpen(false)
+                setPendingPaymentChange(null)
+            }
+
+        }
 
     // Hàm xử lý chuyển đổi giữa Danh sách và Tạo
     const handleNavTabChange = (value: string) => {
@@ -240,7 +337,7 @@ export default function OrderManagement() {
         }
     }
 
-    return (
+    return (<>
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -326,15 +423,17 @@ export default function OrderManagement() {
                             Danh sách đơn hàng ({totalOrders} đơn hàng)
                         </h3>
                     </div>
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[1000px]" >
                         <TableHeader className="bg-gray-50/50">
                             <TableRow className="hover:bg-gray-50/80">
                                 <TableHead className="w-28">Mã đơn hàng</TableHead>
                                 <TableHead className="w-44">Khách hàng</TableHead>
                                 <TableHead className="w-52">Sản phẩm</TableHead>
                                 <TableHead className="w-24 text-center">Tổng tiền</TableHead>
-                                <TableHead className="w-20 text-center">T.Toán</TableHead>
-                                <TableHead className="w-32 text-center">Trạng thái</TableHead>
+                                <TableHead className="w-20 text-center">Thanh toán</TableHead>
+                                <TableHead className="w-36 text-center">Trạng thái thanh toán</TableHead>
+                                <TableHead className="w-32 text-center">Trạng thái đơn hàng</TableHead>
                                 <TableHead className="w-24 text-center">Ngày đặt</TableHead>
                                 <TableHead className="w-20 text-center">Thao tác</TableHead>
                             </TableRow>
@@ -343,7 +442,7 @@ export default function OrderManagement() {
                             {loading ? (
                                 Array.from({ length: limit }).map((_, index) => (
                                     <TableRow key={`loading-${index}`} className="border-b border-gray-100">
-                                        {Array.from({ length: 8 }).map((_, cellIndex) => (
+                                        {Array.from({ length: 9 }).map((_, cellIndex) => (
                                             <TableCell key={cellIndex} className="text-center">
                                                 <div className="h-4 bg-gray-200 rounded animate-pulse" />
                                             </TableCell>
@@ -352,7 +451,7 @@ export default function OrderManagement() {
                                 ))
                             ) : orders.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center py-12">
+                                    <TableCell colSpan={9} className="text-center py-12">
                                         <div className="flex flex-col items-center gap-4">
                                             <ShoppingBag className="w-12 h-12 text-gray-300" />
                                             <div>
@@ -390,7 +489,7 @@ export default function OrderManagement() {
                                         </TableCell>
 
                                         {/* Sản phẩm */}
-                                        <TableCell className="min-w-[280px]">
+                                        <TableCell className="min-w-[180px]">
                                             <div className="space-y-1">
                                                 {order.order_products?.slice(0, 2).map((item, index) => (
                                                     <div key={index} className="text-sm">
@@ -427,17 +526,39 @@ export default function OrderManagement() {
                                                 <div className="text-sm font-medium">
                                                     {order.order_payment?.method ? PAYMENT_METHOD_LABELS[order.order_payment.method as keyof typeof PAYMENT_METHOD_LABELS] || order.order_payment.method : 'N/A'}
                                                 </div>
-                                                <Badge className={order.order_payment?.status ? PAYMENT_STATUS_COLORS[order.order_payment.status as keyof typeof PAYMENT_STATUS_COLORS] || 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
-                                                    {order.order_payment?.status || 'N/A'}
-                                                </Badge>
+                                                
                                             </div>
-                                        </TableCell>
+
+
+                                            </TableCell>
+
+                                            {/* Trạng thái thanh toán */}
+                                            <TableCell className="text-center min-w-[180px]">
+                                                <Select
+                                                    value={order.order_payment?.status || 'pending'}
+                                                    onValueChange={(value) => openConfirmPaymentChange(order, value)}
+                                                >
+                                                    <SelectTrigger className="w-full min-w-[170px]">
+                                                        <SelectValue>
+                                                            <Badge className={`${order.order_payment?.status ? PAYMENT_STATUS_COLORS[order.order_payment.status as keyof typeof PAYMENT_STATUS_COLORS] || 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-100 text-gray-800 border-gray-200'} px-2 py-1 text-xs whitespace-nowrap`}>
+                                                                {order.order_payment?.status ? PAYMENT_STATUS_LABELS[order.order_payment.status as keyof typeof PAYMENT_STATUS_LABELS] || order.order_payment.status : 'Chưa thanh toán'}
+                                                            </Badge>
+                                                        </SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="pending">Chưa thanh toán</SelectItem>
+                                                        <SelectItem value="paid">Đã thanh toán</SelectItem>
+                                                        <SelectItem value="refunded">Hoàn tiền</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+
 
                                         {/* Trạng thái */}
                                         <TableCell className="text-center min-w-[160px]">
                                             <Select
                                                 value={order.order_status || ORDER_STATUS.PENDING}
-                                                onValueChange={(value) => handleStatusUpdate(order._id, value)}
+                                                onValueChange={(value) => openConfirmChange(order, value)}
                                             >
                                                 <SelectTrigger className="w-full min-w-[150px]">
                                                     <SelectValue>
@@ -493,6 +614,7 @@ export default function OrderManagement() {
                             )}
                         </TableBody>
                     </Table>
+                    </div>
                 </div>
             )}
 
@@ -741,12 +863,23 @@ export default function OrderManagement() {
                                             <div>
                                                 <span className="text-sm text-gray-600">Trạng thái:</span>
                                                 <div className="mt-1">
-                                                    <Badge className={selectedOrder.order_payment?.status
-                                                        ? PAYMENT_STATUS_COLORS[selectedOrder.order_payment.status as keyof typeof PAYMENT_STATUS_COLORS] || 'bg-gray-100 text-gray-800 border-gray-200'
-                                                        : 'bg-gray-100 text-gray-800 border-gray-200'
-                                                    }>
-                                                        {selectedOrder.order_payment?.status || 'N/A'}
-                                                    </Badge>
+                                                    <Select
+                                                        value={selectedOrder.order_payment?.status || 'pending'}
+                                                        onValueChange={(value) => openConfirmPaymentChange(selectedOrder, value)}
+                                                    >
+                                                        <SelectTrigger className="w-[220px]">
+                                                            <SelectValue>
+                                                                <Badge className={`${selectedOrder.order_payment?.status ? PAYMENT_STATUS_COLORS[selectedOrder.order_payment.status as keyof typeof PAYMENT_STATUS_COLORS] || 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-100 text-gray-800 border-gray-200'} px-2 py-1 text-xs whitespace-nowrap`}>
+                                                                    {selectedOrder.order_payment?.status ? PAYMENT_STATUS_LABELS[selectedOrder.order_payment.status as keyof typeof PAYMENT_STATUS_LABELS] || selectedOrder.order_payment.status : 'Chưa thanh toán'}
+                                                                </Badge>
+                                                            </SelectValue>
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="pending">Chưa thanh toán</SelectItem>
+                                                            <SelectItem value="paid">Đã thanh toán</SelectItem>
+                                                            <SelectItem value="refunded">Hoàn tiền</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             </div>
                                         </div>
@@ -837,10 +970,7 @@ export default function OrderManagement() {
                                         </h4>
                                         <Select
                                             value={selectedOrder.order_status}
-                                            onValueChange={(value) => {
-                                                handleStatusUpdate(selectedOrder._id, value)
-                                                setSelectedOrder(prev => prev ? { ...prev, order_status: value as any } : null)
-                                            }}
+                                            onValueChange={(value) => openConfirmChange(selectedOrder, value)}
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue />
@@ -866,5 +996,65 @@ export default function OrderManagement() {
                 </DialogContent>
             </Dialog>
         </motion.div>
+            {/* Dialog xác nhận thay đổi trạng thái */}
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        {pendingChange && (
+                            <p className="text-sm text-gray-700">
+                                Bạn có chắc chắn muốn chuyển trạng thái từ '<strong>{ORDER_STATUS_LABELS[(pendingChange.fromStatus as any)] || pendingChange.fromStatus}</strong>' sang '<strong>{ORDER_STATUS_LABELS[(pendingChange.toStatus as any)] || pendingChange.toStatus}</strong>'?
+                            </p>
+                        )}
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => { setConfirmOpen(false); setPendingChange(null) }}
+                                disabled={confirmLoading}
+                            >
+                                Hủy
+                            </Button>
+                            <Button onClick={confirmStatusChange} disabled={confirmLoading}>
+                                {confirmLoading ? 'Đang cập nhật...' : 'Xác nhận'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog xác nhận thay đổi trạng thái thanh toán */}
+            <Dialog open={confirmPaymentOpen} onOpenChange={setConfirmPaymentOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận thay đổi trạng thái thanh toán</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        {pendingPaymentChange && (
+                            <p className="text-sm text-gray-700">
+                                Bạn có chắc chắn muốn chuyển trạng thái thanh toán từ '<strong>{PAYMENT_STATUS_LABELS[(pendingPaymentChange.fromStatus as any)] || pendingPaymentChange.fromStatus}</strong>' sang '<strong>{PAYMENT_STATUS_LABELS[(pendingPaymentChange.toStatus as any)] || pendingPaymentChange.toStatus}</strong>'?
+                            </p>
+                        )}
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => { setConfirmPaymentOpen(false); setPendingPaymentChange(null) }}
+                                disabled={confirmPaymentLoading}
+                            >
+                                Hủy
+                            </Button>
+                            <Button onClick={confirmPaymentStatusChange} disabled={confirmPaymentLoading}>
+                                {confirmPaymentLoading ? 'Đang cập nhật...' : 'Xác nhận'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+
+        </>
     )
 }

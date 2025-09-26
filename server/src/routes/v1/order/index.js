@@ -107,6 +107,19 @@ router.put('/:id/status',
     orderController.updateOrderStatus
 )
 
+
+/**
+ * @route PUT /api/v1/orders/:id/payment-status
+ * @desc Cập nhật trạng thái thanh toán (admin)
+ * @access Private (Admin only)
+ * @params { id }
+ * @body { status }
+ */
+router.put('/:id/payment-status',
+    orderValidation.validateObjectId,
+    orderController.updatePaymentStatus
+)
+
 /**
  * @route GET /api/v1/orders/:id
  * @desc Lấy chi tiết đơn hàng theo ID

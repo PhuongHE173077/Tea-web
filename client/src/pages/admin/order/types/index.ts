@@ -42,7 +42,7 @@ export interface OrderShipping {
 
 export interface OrderPayment {
     method: 'cod' | 'bank_transfer' | 'momo' | 'vnpay'
-    status: 'pending' | 'paid' | 'failed' | 'refunded'
+    status: 'pending' | 'paid' | 'partial' | 'failed' | 'refunded'
 }
 
 export interface OrderCheckout {
@@ -154,15 +154,16 @@ export const PAYMENT_METHOD_LABELS = {
 } as const
 
 export const PAYMENT_STATUS_LABELS = {
-    pending: 'Chờ thanh toán',
+    pending: 'Chưa thanh toán',
     paid: 'Đã thanh toán',
     failed: 'Thanh toán thất bại',
-    refunded: 'Đã hoàn tiền'
+    refunded: 'Hoàn tiền'
 } as const
 
 export const PAYMENT_STATUS_COLORS = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     paid: 'bg-green-100 text-green-800 border-green-200',
+    partial: 'bg-blue-100 text-blue-800 border-blue-200',
     failed: 'bg-red-100 text-red-800 border-red-200',
     refunded: 'bg-gray-100 text-gray-800 border-gray-200'
 } as const

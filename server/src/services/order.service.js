@@ -233,21 +233,17 @@ const updateOrderStatus = async (orderId, newStatus, note = '', updatedBy = null
             throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found')
         }
 
-        // Validate status transition
-        const validTransitions = {
-            [ORDER_STATUS.PENDING]: [ORDER_STATUS.CONFIRMED, ORDER_STATUS.CANCELLED],
-            [ORDER_STATUS.CONFIRMED]: [ORDER_STATUS.PROCESSING, ORDER_STATUS.CANCELLED],
-            [ORDER_STATUS.PROCESSING]: [ORDER_STATUS.SHIPPED, ORDER_STATUS.CANCELLED],
-            [ORDER_STATUS.SHIPPED]: [ORDER_STATUS.DELIVERED],
-            [ORDER_STATUS.DELIVERED]: [],
-            [ORDER_STATUS.CANCELLED]: []
-        }
-
-        if (!validTransitions[order.order_status].includes(newStatus)) {
+        // Allow free transitions but ensure the new status is valid
+        if (!Object.values(ORDER_STATUS).includes(newStatus)) {
             throw new ApiError(
                 StatusCodes.BAD_REQUEST,
-                `Cannot change status from ${order.order_status} to ${newStatus}`
+                `Invalid status: ${newStatus}`
             )
+        }
+
+        // Idempotent: if status is unchanged, return current order without modifying history
+        if (order.order_status === newStatus) {
+            return order
         }
 
         order.order_status = newStatus
@@ -515,12 +511,59 @@ const createOrderByAdmin = async (orderData) => {
     }
 }
 
+const updatePaymentStatus = async (orderId, newStatus, updatedBy = null) => {
+    try {
+        const order = await Order.findById(orderId)
+
+        if (!order) {
+            throw new ApiError(StatusCodes.NOT_FOUND, 'Order not found')
+        }
+
+        if (!Object.values(PAYMENT_STATUS).includes(newStatus)) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, `Invalid payment status: ${newStatus}`)
+        }
+
+        // Idempotent: no changes if same status
+        if (order.order_payment?.status === newStatus) {
+            return order
+        }
+
+        // Ensure order_payment object exists
+        if (!order.order_payment) {
+            order.order_payment = { method: 'cod', status: PAYMENT_STATUS.PENDING, paid_at: null }
+        }
+
+        order.order_payment.status = newStatus
+        if (newStatus === PAYMENT_STATUS.PAID) {
+            order.order_payment.paid_at = new Date()
+        }
+
+        // Push payment history
+        if (!order.payment_history) order.payment_history = []
+        order.payment_history.push({
+            status: newStatus,
+            updated_by: updatedBy,
+            updated_at: new Date()
+        })
+
+        const updatedOrder = await order.save()
+        return updatedOrder
+
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw error
+        }
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message)
+    }
+}
+
 export const orderService = {
     createOrder,
     getOrderById,
     getOrderByTrackingNumber,
     getUserOrders,
     updateOrderStatus,
+    updatePaymentStatus,
     getAllOrders,
     trackOrder,
     getCustomers,
