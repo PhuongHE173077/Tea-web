@@ -2,6 +2,7 @@ import express from 'express';
 import { blogController } from '~/controllers/blog.controller';
 import { authMiddlewares } from '~/middlewares/authMiddlewares';
 import { rbacMiddlewares } from '~/middlewares/rbacMiddlewares';
+import { adminMiddlewares } from '~/middlewares/adminMiddlewares';
 import { blogValidation } from '~/validations/blog.validation';
 
 const router = express.Router();
@@ -80,7 +81,10 @@ router.put('/:id',
  */
 router.delete('/:id',
     authMiddlewares.isAuthorized,
-    rbacMiddlewares.grantAccess('deleteAny', 'blog'),
+    // Tạm thời dùng kiểm tra admin đơn giản để tránh lỗi RBAC cấu hình
+    // Khi hệ RBAC đã cấu hình đầy đủ resources/actions, có thể bật lại grantAccess
+    // rbacMiddlewares.grantAccess('deleteAny', 'blog'),
+    adminMiddlewares.isAdminSimple,
     blogValidation.getBlogById,
     blogController.deleteBlog
 );

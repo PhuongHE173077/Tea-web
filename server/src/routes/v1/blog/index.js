@@ -1,7 +1,7 @@
 import express from 'express';
 import { blogController } from '~/controllers/blog.controller';
 import { authMiddlewares } from '~/middlewares/authMiddlewares';
-import { rbacMiddlewares } from '~/middlewares/rbacMiddlewares';
+import { adminMiddlewares } from '~/middlewares/adminMiddlewares';
 import { blogValidation } from '~/validations/blog.validation';
 
 const router = express.Router();
@@ -33,7 +33,10 @@ router.route('/:id')
     )
     .delete(
         authMiddlewares.isAuthorized,
-        rbacMiddlewares.grantAccess('deleteAny', 'blog'),
+        // Tạm dùng kiểm tra admin đơn giản để tránh lỗi RBAC do cấu hình grants chưa đầy đủ.
+        // Khi đã seed roles/resources đầy đủ, có thể bật lại dòng dưới:
+        // rbacMiddlewares.grantAccess('deleteAny', 'blog'),
+        adminMiddlewares.isAdminSimple,
         blogValidation.getBlogById,
         blogController.deleteBlog
     );

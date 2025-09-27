@@ -5,16 +5,24 @@ const ApiError = require("~/utils/ApiError").default;
 const createBlog = async (req, res, next) => {
     try {
         const schema = Joi.object({
-            blog_title: Joi.string().required().min(5).max(200).trim(),
-            blog_content: Joi.string().required().min(50),
-            blog_excerpt: Joi.string().optional().min(10).max(500), // Changed to optional
+            blog_status: Joi.string().valid('draft', 'published', 'archived').default('draft'),
+            blog_title: Joi.alternatives().conditional('blog_status', {
+                is: 'draft',
+                then: Joi.string().trim().min(1).max(200).required(),
+                otherwise: Joi.string().trim().min(5).max(200).required()
+            }),
+            blog_content: Joi.alternatives().conditional('blog_status', {
+                is: 'draft',
+                then: Joi.string().min(1).required(),
+                otherwise: Joi.string().min(50).required()
+            }),
+            blog_excerpt: Joi.string().optional().min(10).max(500), // optional
             blog_thumbnail: Joi.object({
                 url: Joi.string().uri().optional(),
                 alt: Joi.string().optional().default('')
             }).optional(),
             blog_category: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
             blog_tags: Joi.array().items(Joi.string().trim()).optional(),
-            blog_status: Joi.string().valid('draft', 'published', 'archived').default('draft'),
             blog_meta: Joi.object({
                 title: Joi.string().allow('', null).optional().max(60),
                 description: Joi.string().allow('', null).optional().max(160),
@@ -33,8 +41,17 @@ const createBlog = async (req, res, next) => {
 const updateBlog = async (req, res, next) => {
     try {
         const schema = Joi.object({
-            blog_title: Joi.string().min(5).max(200).trim().optional(),
-            blog_content: Joi.string().min(50).optional(),
+            blog_status: Joi.string().valid('draft', 'published', 'archived').optional(),
+            blog_title: Joi.alternatives().conditional('blog_status', {
+                is: 'draft',
+                then: Joi.string().trim().min(1).max(200),
+                otherwise: Joi.string().trim().min(5).max(200)
+            }).optional(),
+            blog_content: Joi.alternatives().conditional('blog_status', {
+                is: 'draft',
+                then: Joi.string().min(1),
+                otherwise: Joi.string().min(50)
+            }).optional(),
             blog_excerpt: Joi.string().min(10).max(500).optional(),
             blog_thumbnail: Joi.object({
                 url: Joi.string().uri().optional(),
@@ -42,7 +59,6 @@ const updateBlog = async (req, res, next) => {
             }).optional(),
             blog_category: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
             blog_tags: Joi.array().items(Joi.string().trim()).optional(),
-            blog_status: Joi.string().valid('draft', 'published', 'archived').optional(),
             blog_meta: Joi.object({
                 title: Joi.string().allow('', null).optional().max(60),
                 description: Joi.string().allow('', null).optional().max(160),
