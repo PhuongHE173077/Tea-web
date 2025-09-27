@@ -69,9 +69,43 @@ const viewMyProfile = async (req, res, next) => {
     }
 }
 
+
+const getUserById = async (req, res, next) => {
+    try {
+        const user = await userService.getUserById(req.params.id)
+        if (!user) return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+        res.status(StatusCodes.OK).json(user)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const updateUser = async (req, res, next) => {
+    try {
+        const updatedUser = await userService.updateUser(req.params.id, req.body)
+        if (!updatedUser) return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+        res.status(StatusCodes.OK).json(updatedUser)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const deleteUser = async (req, res, next) => {
+    try {
+        const deletedUser = await userService.deleteUser(req.params.id)
+        if (!deletedUser) return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' })
+        res.status(StatusCodes.OK).json({ message: 'User deleted successfully' })
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const userController = {
     viewAnyProfile,
     register,
     login,
-    viewMyProfile
+    viewMyProfile,
+    getUserById,
+    updateUser,
+    deleteUser
 }
