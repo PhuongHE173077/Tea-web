@@ -14,6 +14,7 @@ interface SidebarFilterProps {
     effects: Effect[];
     tastes: Taste[];
     filter: FilterState;
+    teaCategories: TeaCategory[];
     onFilterChange: (newFilter: Partial<FilterState>) => void;
 }
 
@@ -22,6 +23,7 @@ const SidebarFilter = ({
     effects,
     tastes,
     filter,
+    teaCategories,
     onFilterChange
 }: SidebarFilterProps) => {
     const [openSections, setOpenSections] = useState({
@@ -122,7 +124,7 @@ const SidebarFilter = ({
                 {/* Categories Filter */}
                 <FilterSection
                     title="Loại trà"
-                    items={categories.map(cat => cat.category_name)}
+                    items={teaCategories.map(cat => cat.tea_category_name)}
                     sectionKey="category"
                     selectedItems={filter.categories}
                     onItemChange={handleCategoryChange}

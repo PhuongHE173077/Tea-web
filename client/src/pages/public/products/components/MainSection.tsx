@@ -77,11 +77,22 @@ const TeaProductsLayout = () => {
     const applyFilters = useCallback(() => {
         let filtered = [...teas];
 
-        // Filter by categories
+        // Filter by teaCategories
         if (filter.categories.length > 0) {
-            filtered = filtered.filter(tea =>
-                filter.categories.includes(tea.product_category?.category_name || '')
-            );
+            filtered = filtered.filter(tea => {
+                // Nếu tea.product_tea_category là mảng id (string)
+                if (Array.isArray((tea as any).product_tea_category)) {
+                    // Map id sang tên từ teaCategories
+                    const teaCatNames = ((tea as any).product_tea_category as string[])
+                        .map(id => {
+                            const found = teaCategories.find(tc => tc._id === id);
+                            return found ? found.tea_category_name : null;
+                        })
+                        .filter(Boolean);
+                    return teaCatNames.some(name => filter.categories.includes(name!));
+                }
+                return false;
+            });
         }
 
         // Filter by price range
@@ -171,6 +182,7 @@ const TeaProductsLayout = () => {
                                 effects={effects}
                                 tastes={tastes}
                                 filter={filter}
+                                teaCategories={teaCategories}
                                 onFilterChange={handleFilterChange}
                             />
                         </div>

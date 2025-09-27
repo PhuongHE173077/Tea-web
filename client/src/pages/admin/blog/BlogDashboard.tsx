@@ -132,11 +132,11 @@ const BlogDashboard: React.FC = () => {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'published':
-                return <Badge variant="default">Đã xuất bản</Badge>;
+                return <Badge variant="default">Public</Badge>;
             case 'draft':
-                return <Badge variant="secondary">Bản nháp</Badge>;
+                return <Badge variant="secondary">Draft</Badge>;
             case 'archived':
-                return <Badge variant="outline">Lưu trữ</Badge>;
+                return <Badge variant="outline">private</Badge>;
             default:
                 return <Badge variant="secondary">{status}</Badge>;
         }
@@ -199,7 +199,7 @@ const BlogDashboard: React.FC = () => {
             </div>
 
             {/* Filters */}
-            
+
             {/* Blog Table */}
             <Card>
                 <CardHeader>
@@ -295,9 +295,9 @@ const BlogDashboard: React.FC = () => {
                                                 <div className="text-sm">
                                                     <div>{format(new Date(blog.createdAt), 'dd/MM/yyyy')}</div>
                                                     <div className="text-gray-500">
-                                                        {formatDistanceToNow(new Date(blog.createdAt), { 
-                                                            addSuffix: true, 
-                                                            locale: vi 
+                                                        {formatDistanceToNow(new Date(blog.createdAt), {
+                                                            addSuffix: true,
+                                                            locale: vi
                                                         })}
                                                     </div>
                                                 </div>
@@ -333,7 +333,7 @@ const BlogDashboard: React.FC = () => {
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Bạn có chắc chắn muốn xóa blog "{blog.blog_title}"? 
+                                                                        Bạn có chắc chắn muốn xóa blog "{blog.blog_title}"?
                                                                         Hành động này không thể hoàn tác.
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
