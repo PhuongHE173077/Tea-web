@@ -110,9 +110,10 @@ const BlogDashboard: React.FC = () => {
             await deleteBlog(blogId);
             toast.success(`Đã xóa blog "${blogTitle}" thành công`);
             fetchBlogs();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting blog:', error);
-            toast.error('Có lỗi xảy ra khi xóa blog');
+            const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi xóa blog';
+            toast.error(message);
         }
     };
 
@@ -357,35 +358,64 @@ const BlogDashboard: React.FC = () => {
 
                             {/* Pagination */}
                             {pagination && pagination.totalPages > 1 && (
-                                <div className="flex justify-center items-center gap-2 mt-6">
-                                    <Button
-                                        variant="outline"
-                                        disabled={!pagination.hasPrevPage}
-                                        onClick={() => handlePageChange(filters.page! - 1)}
-                                    >
-                                        Trước
-                                    </Button>
-                                    
-                                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                        const page = i + 1;
-                                        return (
-                                            <Button
-                                                key={page}
-                                                variant={page === filters.page ? "default" : "outline"}
-                                                onClick={() => handlePageChange(page)}
-                                            >
-                                                {page}
-                                            </Button>
-                                        );
-                                    })}
+                                <div className="flex flex-col md:flex-row md:justify-between items-center gap-3 mt-6">
+                                    <div className="text-sm text-gray-600">
+                                        Trang {pagination.currentPage} / {pagination.totalPages} • Tổng: {pagination.totalItems}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            disabled={!pagination.hasPrevPage}
+                                            onClick={() => handlePageChange(Math.max(1, (filters.page || 1) - 1))}
+                                        >
+                                            Trước
+                                        </Button>
 
-                                    <Button
-                                        variant="outline"
-                                        disabled={!pagination.hasNextPage}
-                                        onClick={() => handlePageChange(filters.page! + 1)}
-                                    >
-                                        Sau
-                                    </Button>
+                                        {(() => {
+                                            const current = filters.page || 1;
+                                            const total = pagination.totalPages;
+                                            let start = Math.max(1, current - 2);
+                                            let end = Math.min(total, start + 4);
+                                            if (end - start < 4) start = Math.max(1, end - 4);
+                                            const pages = [] as number[];
+                                            for (let p = start; p <= end; p++) pages.push(p);
+                                            return pages.map((page) => (
+                                                <Button
+                                                    key={page}
+                                                    variant={page === current ? 'default' : 'outline'}
+                                                    onClick={() => handlePageChange(page)}
+                                                >
+                                                    {page}
+                                                </Button>
+                                            ));
+                                        })()}
+
+                                        <Button
+                                            variant="outline"
+                                            disabled={!pagination.hasNextPage}
+                                            onClick={() => handlePageChange(Math.min(pagination.totalPages, (filters.page || 1) + 1))}
+                                        >
+                                            Sau
+                                        </Button>
+
+                                        {/* Page size */}
+                                        <div className="ml-2 flex items-center gap-2">
+                                            <span className="text-sm text-gray-600 hidden md:inline">Hiển thị</span>
+                                            <Select
+                                                value={(filters.limit || 10).toString()}
+                                                onValueChange={(val) => setFilters(prev => ({ ...prev, limit: parseInt(val, 10), page: 1 }))}
+                                            >
+                                                <SelectTrigger className="w-[90px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[5, 10, 20, 50].map(size => (
+                                                        <SelectItem key={size} value={size.toString()}>{size}/trang</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </>

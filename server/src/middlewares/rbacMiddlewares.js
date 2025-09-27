@@ -12,12 +12,15 @@ const grantAccess = (action, resource) => {
                 throw new ApiError(StatusCodes.UNAUTHORIZED, "Role not found in user.");
             }
             const rbac = new AccessControl();
+            // roleService.getRoleList returns an array of grants: { role, resource, action, attributes }
             rbac.setGrants(await roleService.getRoleList());
-            const permission = rbac.can(rol_name)[action](resource);
+
+            const roleName = typeof userRole === 'string' ? userRole : (userRole?.rol_name || userRole?.role || 'user');
+            const permission = rbac.can(roleName)[action](resource);
             if (!permission.granted) {
-                throw new ApiError(StatusCodes.FORBIDDEN, "You don't have enough permission to access!");
+                return next(new ApiError(StatusCodes.FORBIDDEN, "You don't have enough permission to access!"));
             }
-            next();
+            return next();
         } catch (error) {
             next(error)
         }

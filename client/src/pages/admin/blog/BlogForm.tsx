@@ -21,9 +21,11 @@ import { z } from 'zod';
 import BlogMarkdownEditor from '@/components/blog/BlogMarkdownEditor';
 import MDEditor from '@uiw/react-md-editor';
 
+import Swal from 'sweetalert2';
 const blogSchema = z.object({
-    blog_title: z.string().min(5, 'Tiêu đề phải có ít nhất 5 ký tự').max(200, 'Tiêu đề không được quá 200 ký tự'),
-    blog_content: z.string().min(50, 'Nội dung phải có ít nhất 50 ký tự'),
+    // Cho phép nới lỏng khi là bản nháp
+    blog_title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự'),
+    blog_content: z.string().min(1, 'Nội dung không được để trống'),
     blog_category: z.string().optional(),
     blog_status: z.enum(['draft', 'published', 'archived']),
     blog_featured: z.boolean(),
@@ -32,6 +34,15 @@ const blogSchema = z.object({
         description: z.string().max(160, 'Meta description không được quá 160 ký tự').optional(),
         keywords: z.array(z.string()).optional()
     }).optional()
+}).superRefine((data, ctx) => {
+    if (data.blog_status !== 'draft') {
+        if (!data.blog_title || data.blog_title.trim().length < 5) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['blog_title'], message: 'Tiêu đề phải có ít nhất 5 ký tự khi xuất bản' });
+        }
+        if (!data.blog_content || data.blog_content.trim().length < 50) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['blog_content'], message: 'Nội dung phải có ít nhất 50 ký tự khi xuất bản' });
+        }
+    }
 });
 
 type BlogFormData = z.infer<typeof blogSchema>;
@@ -113,12 +124,12 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
 
     const fetchBlogData = async () => {
         if (!id) return;
-        
+
         setLoading(true);
         try {
             const response = await getBlogById(id);
             const blog = response.data;
-            
+
             reset({
                 blog_title: blog.blog_title,
                 blog_content: blog.blog_content,
@@ -171,11 +182,33 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
             navigate('/admin/blog');
         } catch (error: any) {
             console.error('Error saving blog:', error);
-            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi lưu blog');
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                (Array.isArray(error?.response?.data?.errors) ? error.response.data.errors[0]?.message : undefined) ||
+                error?.message ||
+                'Có lỗi xảy ra khi lưu blog';
+            toast.error(message);
         } finally {
             setLoading(false);
         }
+    }
+    const onInvalid = (formErrors: any) => {
+        const messages: string[] = [];
+        if (formErrors?.blog_title?.message) messages.push(String(formErrors.blog_title.message));
+        if (formErrors?.blog_content?.message) messages.push(String(formErrors.blog_content.message));
+        if (messages.length === 0) {
+            messages.push('Vui lòng điền đầy đủ Tiêu đề và Nội dung hợp lệ.');
+        }
+        Swal.fire({
+            icon: 'error',
+            title: 'Không thể lưu blog',
+            html: 'Vui lòng kiểm tra lại thông tin tiêu đề và nội dung',
+            confirmButtonText: 'Đã hiểu'
+        });
     };
+
+
 
     const handlePreview = () => {
         setPreviewMode(!previewMode);
@@ -219,8 +252,8 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                             <Eye className="h-4 w-4 mr-2" />
                             {previewMode ? 'Chỉnh sửa' : 'Xem trước'}
                         </Button>
-                        <Button 
-                            onClick={handleSubmit(onSubmit)} 
+                        <Button
+                            onClick={handleSubmit(onSubmit, onInvalid)}
                             disabled={loading}
                         >
                             <Save className="h-4 w-4 mr-2" />
@@ -264,11 +297,10 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                     </Card>
                 ) : (
                     /* Edit Mode */
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
                         <Tabs defaultValue="content" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
+                            <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="content">Nội dung</TabsTrigger>
-                                <TabsTrigger value="settings">Cài đặt</TabsTrigger>
                                 <TabsTrigger value="seo">SEO</TabsTrigger>
                             </TabsList>
 
@@ -309,25 +341,10 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                                                 disabled={loading}
                                             />
                                         </div>
-                                    </CardContent>
-                                </Card>
 
-
-                            </TabsContent>
-
-                            <TabsContent value="settings" className="space-y-6">
-                                {/* Settings */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Cài đặt blog</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
                                         {/* Category */}
                                         <div>
                                             <Label htmlFor="blog_category">Danh mục</Label>
-
-
-
                                             <Select
                                                 value={watchedValues.blog_category || 'none'}
                                                 onValueChange={(value) => setValue('blog_category', value)}
@@ -407,7 +424,12 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                                         </div>
                                     </CardContent>
                                 </Card>
+
+
+
                             </TabsContent>
+
+
 
                             <TabsContent value="seo" className="space-y-6">
                                 {/* SEO */}
@@ -465,7 +487,7 @@ const BlogForm: React.FC<BlogFormProps> = ({ mode }) => {
                                             </div>
                                         </div>
 
-                                        
+
                                     </CardContent>
                                 </Card>
                             </TabsContent>

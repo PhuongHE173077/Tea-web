@@ -107,7 +107,7 @@ const getAllBlogs = async (query) => {
         const {
             page = 1,
             limit = 10,
-            status = 'published',
+            status,
             category,
             author,
             featured,
