@@ -12,4 +12,7 @@ router.route('/viewAny')
 router.route("/me")
     .get(authMiddlewares.isAuthorized, userController.viewMyProfile)
 
+router.route("/")
+
+
 export const userRoutes = router

@@ -67,7 +67,8 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2" onClick={() => window.location.href = "/"}>
           <img src="/logo.png" alt="Trà Việt" className="h-10 w-10" />
-          <span className="font-bold text-lg" style={{ color: 'hsl(85, 30%, 25%)' }}>{import.meta.env.VITE_APP_NAME}</span>
+          <img src="/name-web.png" alt="Trà Việt" className="h-[40px] w-15" />
+
         </div>
 
         <div className="hidden md:block flex-1 mx-8">

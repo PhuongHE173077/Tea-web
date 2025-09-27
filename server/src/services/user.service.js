@@ -91,8 +91,29 @@ const getUserById = async (id) => {
     }
 }
 
+
+const updateUser = async (id, data) => {
+    try {
+        const updated = await User.findByIdAndUpdate(id, data, { new: true }).populate('usr_role').lean()
+        return pickUser(updated)
+    } catch (error) {
+        throw error
+    }
+}
+
+const deleteUser = async (id) => {
+    try {
+        const deleted = await User.findByIdAndDelete(id)
+        return deleted
+    } catch (error) {
+        throw error
+    }
+}
+
 export const userService = {
     createUser,
     login,
-    getUserById
+    getUserById,
+    updateUser,
+    deleteUser
 }

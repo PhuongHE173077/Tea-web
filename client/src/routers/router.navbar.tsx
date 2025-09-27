@@ -57,10 +57,6 @@ export const routerNavBar: RouteNavBar[] = [
         isActive: false,
         items: [
             {
-                title: "Quản lý quuyền ",
-                url: "/rbac/role",
-            },
-            {
                 title: "Quản lý nhân viên",
                 url: "/rbac/staff",
             },
